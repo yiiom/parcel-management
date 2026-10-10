@@ -248,4 +248,7 @@
 - 因此 GitHub 上目前沒有 workflow，CI/CD 尚未觸發，也未建立任何 GHCR 映像。文件中指向程式檔案的連結在程式碼推送前無法於 GitHub 開啟。推送程式碼前仍須先以具備 `workflow` 權限的憑證重新登入。
 - 文件提交 26592f3 推送成功，`git ls-remote` 確認遠端 main 指向該提交。
 - 使用者重新登入後要求推送程式碼：第二筆提交納入 `frontend/`、`backend/`、`deploy/`、`.github/workflows/deploy.yml`、`compose.yaml`、`.env.example`。此推送會首次觸發 workflow；執行結果另行記錄，未取得結果前不視為 CI/CD 已驗收。
+- 程式碼提交 1ec381d 推送成功並觸發 workflow 第一次執行（run 38078469002）。隨後使用者更正為先不要包含任何程式碼、只放文件。處理方式：新增一筆提交，將 `frontend/`、`backend/`、`deploy/`、`.github/`、`compose.yaml`、`.env.example` 共 64 個檔案自版本管理移除，本機檔案保留。未改寫歷史，因此 1ec381d 仍留在 GitHub 的提交紀錄中，可從歷史看到程式碼；是否改寫歷史待使用者決定。
+- 該次 workflow 執行並未因此停止，其結果及可能產生的 GHCR 映像不代表 CI/CD 已驗收。移除 workflow 檔後，後續推送不會再觸發。
+- 使用者自行刪除了本機的 `backend/app/main.py`，未還原；該檔內容仍存在於提交 1ec381d。
 - 以上為替身演練，不是真實 Docker 或 GHCR 的結果。未連線 EC2、未變更主機。GitHub push → GHCR → EC2 端到端仍未執行；根目錄 Git 納管、`EC2_SSH_KEY` 與安全群組 SSH 來源等前置條件不變，不能標示自動部署已啟用。業務功能完成狀態不變。

@@ -58,4 +58,4 @@ D-19 其餘內容維持：不使用 ECR、S3、OIDC／SSM，不建立 GitHub Env
 
 使用者建立 https://github.com/yiiom/parcel-management.git，要求將專案關聯、提交並推送，並明確選擇移除 `frontend/.git`。取代 D-17 中 T-08「匯入 frontend 歷史」的安排：該歷史只有一筆 Create Next App 產生的初始提交，不匯入根目錄歷史；移除前完整備份至 `artifacts/frontend-git-backup.git`（不納入版本管理）。根目錄使用 main 分支，前端、後端、部署程式與文件納入同一個儲存庫。T-08 已解決；商業規則及功能階段不變。
 
-使用者隨後要求首次推送先排除程式碼、只放文件。程式碼仍屬於同一個儲存庫的規劃不變，待使用者指示後再提交與推送。使用者重新登入取得 workflow 權限後，已指示推送程式碼。商業規則及功能階段不變；同步文件為 `docs/cicd-deployment.md`、`docs/development-plan.md`、`docs/README.md`。
+使用者隨後要求首次推送先排除程式碼、只放文件。程式碼仍屬於同一個儲存庫的規劃不變，待使用者指示後再提交與推送。使用者重新登入取得 workflow 權限後，已指示推送程式碼。推送後使用者更正為「先不要包含任何程式碼，只放文件」，以此為最新決議：GitHub 目前內容只保留文件，程式碼自版本管理移除但保留在本機，何時納入待使用者指示。商業規則及功能階段不變；同步文件為 `docs/cicd-deployment.md`、`docs/development-plan.md`、`docs/README.md`。
