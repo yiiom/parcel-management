@@ -1,0 +1,62 @@
+name: parcel-management
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: parcel_management
+      MYSQL_USER: parcel_app
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Create .env from .env.example first}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Create .env from .env.example first}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql --protocol=TCP -h 127.0.0.1 -u$$MYSQL_USER -D $$MYSQL_DATABASE -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: parcel_management
+      DB_USER: parcel_app
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Create .env from .env.example first}
+      WATCHFILES_FORCE_POLLING: "true"
+      CORS_ORIGINS: http://localhost:${FRONTEND_PORT:-3001},http://127.0.0.1:${FRONTEND_PORT:-3001}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8001}:8000"
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  frontend:
+    build: ./frontend
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-8001}
+      API_INTERNAL_URL: http://backend:8000
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3001}:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

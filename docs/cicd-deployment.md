@@ -42,7 +42,7 @@ PR 只執行步驟 1～4 的檢查，不 push 映像、不部署。只有 reposi
 
 ## 啟用前需要的設定
 
-1. GitHub repository 根目錄須包含 `.github`、`frontend`、`backend`、`deploy`。Repository 已建立並關聯（D-21）：https://github.com/yiiom/parcel-management ；目前只推送了文件，程式碼與 workflow 尚未推送。推送 workflow 需要具備 `workflow` 權限的 GitHub 憑證，可執行 `git credential-manager github login` 重新登入取得。
+1. GitHub repository 根目錄須包含 `.github`、`frontend`、`backend`、`deploy`。已完成（D-21）：https://github.com/yiiom/parcel-management 。日後若推送 workflow 檔被拒絕並提示缺少 `workflow` scope，執行 `git credential-manager github login` 重新登入即可。
 2. 在 repository Settings → Secrets and variables → Actions → Repository secrets 新增 `EC2_SSH_KEY`，值為可登入這台機器的 SSH 私鑰內容。私鑰不放進程式碼或提交 Git。**這是唯一需要手動新增的 Secret。**
 3. EC2 安全群組的 SSH 22 埠必須允許實際執行 workflow 的 runner 來源。目前「我的 IP」僅允許你的電腦，GitHub runner 連不進來；此項未解決前自動部署無法成功。
 4. 主機須已安裝 Docker Compose，且 `/opt/parcel-management/shared/.env` 存在。這台 EC2 已完成準備；新主機首次執行 `sudo bash deploy/bootstrap.sh`。

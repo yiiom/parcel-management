@@ -246,4 +246,6 @@
 - 完整專案的首次推送被 GitHub 拒絕：本機儲存的憑證沒有 `workflow` 權限，無法建立 `.github/workflows/deploy.yml`；遠端維持為空。該筆本機提交未推送，已重做。
 - 使用者改為要求先只推送文件、排除程式碼。提交範圍：`docs/`（含產生 API 文件的來源腳本）、根目錄 `README.md`、`AGENTS.md`、`.gitignore`、`.gitattributes`。`frontend/`、`backend/`、`deploy/`、`.github/`、`compose.yaml`、`.env.example` 保留在本機，未納入提交，檔案未刪除。
 - 因此 GitHub 上目前沒有 workflow，CI/CD 尚未觸發，也未建立任何 GHCR 映像。文件中指向程式檔案的連結在程式碼推送前無法於 GitHub 開啟。推送程式碼前仍須先以具備 `workflow` 權限的憑證重新登入。
+- 文件提交 26592f3 推送成功，`git ls-remote` 確認遠端 main 指向該提交。
+- 使用者重新登入後要求推送程式碼：第二筆提交納入 `frontend/`、`backend/`、`deploy/`、`.github/workflows/deploy.yml`、`compose.yaml`、`.env.example`。此推送會首次觸發 workflow；執行結果另行記錄，未取得結果前不視為 CI/CD 已驗收。
 - 以上為替身演練，不是真實 Docker 或 GHCR 的結果。未連線 EC2、未變更主機。GitHub push → GHCR → EC2 端到端仍未執行；根目錄 Git 納管、`EC2_SSH_KEY` 與安全群組 SSH 來源等前置條件不變，不能標示自動部署已啟用。業務功能完成狀態不變。

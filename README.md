@@ -66,5 +66,5 @@ npm run dev
 ## Git 現況
 
 專案統一由根目錄 Git 管理（分支 main），遠端為 https://github.com/yiiom/parcel-management.git。
-目前 GitHub 上只有文件；前端、後端與部署程式保留在本機，尚未推送。
+文件、前端、後端與部署程式均已推送。
 Next.js 建立工具原本在 `frontend` 內初始化的獨立 Git 已依 D-21 備份後移除。
