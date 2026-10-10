@@ -1,0 +1,4312 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>寓收 API · Swagger</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui.css">
+<style>body{margin:0;background:#fafcfc;font-family:system-ui,"Microsoft JhengHei",sans-serif}.banner{background:#155e55;color:white;padding:18px 28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.banner strong{font-size:18px}.banner small{display:block;margin-top:4px;color:#d6ece7}.banner button{background:white;color:#155e55;border:0;border-radius:6px;padding:9px 14px;cursor:pointer}.swagger-ui .wrapper{max-width:1180px}.swagger-ui .info{margin:30px 0}.swagger-ui .opblock-summary-description,.swagger-ui .markdown{font-family:system-ui,"Microsoft JhengHei",sans-serif}#fallback{padding:24px;max-width:1120px;margin:auto;color:#334155}#fallback details{padding:12px;border-bottom:1px solid #dce4e8}#fallback summary{cursor:pointer}#fallback pre{overflow:auto;font-size:12px}.error{color:#9b3535}</style></head><body>
+<div class="banner"><div><strong>寓收 · API 規格預覽</strong><small>設計草案 · 六組功能 · 尚未連接後端，未開放發送請求</small></div><button id="download">下載 OpenAPI JSON</button></div>
+<div id="swagger-ui"></div><div id="fallback"><p>正在載入 Swagger UI。首次開啟需要網路；下方提供離線規格摘要。</p></div>
+<script id="spec" type="application/json">{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "寓收｜大樓包裹管理系統 API",
+    "version": "0.4.0-draft",
+    "description": "大樓包裹管理系統 API 設計草案。**這是文件，尚未實作後端。**\n\n依 docs/business-rules.md 與 docs/open-questions.md 開發；第一階段確認規則，第二階段基本功能，第三階段主要功能。Q-01～Q-10已確認，見 docs/decisions.md；後續技術方案仍按T清單驗證。\n\n## 使用流程\n1. 註冊 → 登入 → 驗證戶別邀請碼 → 確認加入戶別。\n2. 管理員登記包裹 → 住戶查看取件碼 → 管理員驗證 → 住戶收到實物後確認 → 取件碼失效。\n3. 住戶退出申請 → 管理員確認搬離 → 取消資格並停用舊邀請碼。\n\n## 已確認的功能規則\n- 角色：system_admin / building_admin / resident；大樓範圍與住戶資格每次由後端檢查，不能只相信 JWT 內的舊資格。\n- 每位住戶同時只有一個有效戶別；退出申請中仍算有效，取消後失去所有原戶資料權限。\n- 同戶同入住批次成員共同查看包裹；晚加入的家人也可查看。新批次住戶與已搬離者不能看舊資料，不以 joined_at 作為唯一過濾條件。\n- 管理員驗證不等於領取完成。驗證 10 分鐘有效；住戶確認成功後才保存簽收、使碼失效。重複與並行確認不能產生兩筆簽收。\n- 每戶同時間只有一個有效入住批次。整戶搬離時一起結束批次、撤銷資格、停用邀請碼、取消驗證並將未領包裹列為異常。舊批次包裹只處理退回，不提供搬離後領取。\n- 邀請碼只在產生時回傳原碼一次，之後只看期限與狀態。有效期間可供同批次多人使用，重新產生停用舊碼。\n- 異常只記錄最近一次，存在包裹資料內，沒有獨立異常歷程表。\n- 一位大樓管理員同時間只管理一棟大樓，同棟可有多位管理員。\n\n## API 契約與已確認碼規則\n- 清單採 page / page_size，回傳 items / total / page / page_size；時間用含時區的 ISO 8601。\n- 邀請碼四位數、全系統有效碼唯一、固定24小時；取件碼六位數、同棟有效碼唯一，均為字串。兩種碼各連錯5次，暫停該帳號對應驗證5分鐘。\n\n## 登入及安全\n使用 access_token HttpOnly Cookie。正式環境需 HTTPS、Secure、SameSite 和狀態變更請求的 CSRF／Origin 防護。Cookie 名稱為本草案預設。Swagger 預覽關閉 Try it out，避免對尚未存在的服務送出請求。每個受保護請求都重新檢查帳號啟用與當下權限。\n\n## 前端同步\n包裹詳情提供 active_verification_id。住戶與經手管理員可查驗證進度；第一版可輪詢，未宣稱已具備即時推送。\n\n## 補充\n本規格的統一錯誤格式需在 FastAPI 中實作對應例外處理；不是 FastAPI 預設 validation 回應。邀請碼存雜湊，取件碼存加密資料，但皆不回傳保存值。一般顯示資訊可由關聯取得；簽收者與經手管理員姓名須保存簽收當時快照。加密與雜湊的查找、唯一限制與交易實作仍須依資料庫設計文件核對。\n"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001",
+      "description": "預計使用的本機 FastAPI（尚未實作）"
+    }
+  ],
+  "tags": [
+    {
+      "name": "帳號與登入"
+    },
+    {
+      "name": "大樓與管理員"
+    },
+    {
+      "name": "戶別與邀請碼"
+    },
+    {
+      "name": "住戶資格與搬離"
+    },
+    {
+      "name": "包裹管理"
+    },
+    {
+      "name": "取件與電子簽收"
+    }
+  ],
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "帳號與登入"
+        ],
+        "operationId": "register_resident",
+        "summary": "註冊住戶帳號",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n公開註冊固定建立 resident 角色；不接受 role 或戶別資格。註冊後呼叫登入，再使用邀請碼加入戶別。",
+        "x-roles": [],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-development-phase": 2
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "帳號與登入"
+        ],
+        "operationId": "login",
+        "summary": "登入",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n驗證Email、密碼與帳號啟用；HttpOnly Cookie登入自成功起8小時有效，到期重新登入。各裝置獨立，不回傳密碼或JWT。",
+        "x-roles": [],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "正式環境須 HTTPS；Cookie 使用 HttpOnly、Secure、SameSite=Lax、Path=/。 Max-Age=28800；後端也需驗證8小時絕對期限。",
+                "schema": {
+                  "type": "string",
+                  "example": "access_token=\u003ctoken>; Max-Age=28800; Path=/; HttpOnly; Secure; SameSite=Lax"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-development-phase": 2
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "帳號與登入"
+        ],
+        "operationId": "logout",
+        "summary": "登出",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n使目前裝置當次登入在後端失效並清除Cookie；其他裝置不受影響。重複登出仍成功，不可只清除前端Cookie卻保留可用的原憑證。",
+        "x-roles": [],
+        "responses": {
+          "204": {
+            "description": "操作成功。",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "access_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "security": [],
+        "x-development-phase": 2
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "帳號與登入"
+        ],
+        "operationId": "get_me",
+        "summary": "取得自己的帳號與資格",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n僅回傳目前登入者；退出申請中仍有資格，revoked 不具有包裹存取權。",
+        "x-roles": [
+          "系統管理員",
+          "大樓管理員",
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "x-development-phase": 2
+      },
+      "patch": {
+        "tags": [
+          "帳號與登入"
+        ],
+        "operationId": "update_me",
+        "summary": "修改個人資料",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n只允許姓名與電話；角色與戶別資格不可透過本 API 修改。",
+        "x-roles": [
+          "系統管理員",
+          "大樓管理員",
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/buildings": {
+      "get": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "list_buildings",
+        "summary": "取得可管理的大樓",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員\n\n系統管理員可查看全部；大樓管理員只看到被指派的大樓。",
+        "x-roles": [
+          "系統管理員",
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "description": "依大樓名稱搜尋。",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-development-phase": 2
+      },
+      "post": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "create_building",
+        "summary": "建立大樓",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n建立大樓基本資料。",
+        "x-roles": [
+          "系統管理員"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Building"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildingCreate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/buildings/{building_id}": {
+      "get": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "get_building",
+        "summary": "取得大樓資料",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員\n\n大樓管理員需具有該大樓管理資格。",
+        "x-roles": [
+          "系統管理員",
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Building"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 2
+      },
+      "patch": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "update_building",
+        "summary": "修改大樓資料",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員\n\n檢查角色與大樓範圍。",
+        "x-roles": [
+          "系統管理員",
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Building"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildingUpdate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/buildings/{building_id}/admins": {
+      "post": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "assign_building_admin",
+        "summary": "建立或指派大樓管理員",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n建立新管理員或指派既有 building_admin 帳號。一人同時間只能負責一棟大樓；已分配任一大樓時回傳 409。同棟可有多位管理員。",
+        "x-roles": [
+          "系統管理員"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingAdmin"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildingAdminAssign"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      },
+      "get": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "list_building_admins",
+        "summary": "查看大樓管理員",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n只供系統管理員查看。",
+        "x-roles": [
+          "系統管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingAdminPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "x-development-phase": 2
+      }
+    },
+    "/api/buildings/{building_id}/units": {
+      "get": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "list_units",
+        "summary": "查看樓層與戶號",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n只回傳所屬大樓戶別，不回傳邀請碼。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "floor",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "example": "5"
+            }
+          }
+        ],
+        "x-development-phase": 2
+      },
+      "post": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "create_unit",
+        "summary": "建立戶別",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n同棟大樓的 unit_number 不可重複。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnitCreate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/units/{unit_id}": {
+      "patch": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "update_unit",
+        "summary": "更正戶別資料",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n只更正樓層與戶號，不改變戶別所屬大樓或居住成員。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unit"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnitUpdate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/invite-codes/{code_id}/deactivate": {
+      "post": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "deactivate_invite_code",
+        "summary": "停用邀請碼",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n重複停用回傳相同的 inactive 結果。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCode"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "code_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 2
+      }
+    },
+    "/api/unit-invitations/verify": {
+      "post": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "verify_unit_invitation",
+        "summary": "驗證戶別邀請碼",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 住戶\n\n僅顯示大樓、戶別與期限，不取得包裹查看權。錯誤、過期及已停用邀請碼統一回傳 INVALID_INVITE_CODE。\n\n同一帳號對此類碼連續失敗5次，暫停對應驗證功能5分鐘，回傳429與Retry-After；不暫停其他功能或其他帳號。邀請碼驗證與確認加入共用失敗計數，取件碼另計。",
+        "x-roles": [
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationVerified"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteInput"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/unit-memberships": {
+      "post": {
+        "tags": [
+          "住戶資格與搬離"
+        ],
+        "operationId": "join_unit",
+        "summary": "確認加入戶別",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 住戶\n\n確認加入時重新檢查：帳號啟用、resident 角色、邀請碼有效、批次未結束。每人只准一筆 active 或 exit_requested 資格；同批次重試回傳既有資格（200），其他戶衝突回傳 409。檢查與建立須防止並行加入兩戶。不接受前端指定 user_id 或 occupancy_id。\n\n同一帳號對此類碼連續失敗5次，暫停對應驗證功能5分鐘，回傳429與Retry-After；不暫停其他功能或其他帳號。邀請碼驗證與確認加入共用失敗計數，取件碼另計。\n已取消資格者取得新有效碼且無其他有效資格可建立新紀錄；保留舊資格，不增加封鎖名單。",
+        "x-roles": [
+          "住戶"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "200": {
+            "description": "已加入同批次，回傳既有資格。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteInput"
+              }
+            }
+          }
+        },
+        "x-development-phase": 2
+      }
+    },
+    "/api/buildings/{building_id}/memberships": {
+      "get": {
+        "tags": [
+          "住戶資格與搬離"
+        ],
+        "operationId": "list_memberships",
+        "summary": "查看住戶與退出申請",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n檢查管理員所屬大樓。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "unit_id",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 501
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "exit_requested",
+                "revoked"
+              ],
+              "example": "active"
+            }
+          },
+          {
+            "name": "occupancy_id",
+            "in": "query",
+            "required": false,
+            "description": "依入住批次篩選，不擴大權限。",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 7
+            }
+          }
+        ],
+        "x-development-phase": 2
+      }
+    },
+    "/api/unit-memberships/{membership_id}/exit-request": {
+      "post": {
+        "tags": [
+          "住戶資格與搬離"
+        ],
+        "operationId": "request_exit",
+        "summary": "提出退出申請",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 住戶\n\n住戶只能對自己的有效資格提出申請。管理員確認前仍維持原本存取權；重複申請回傳既有 exit_requested 狀態。",
+        "x-roles": [
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "membership_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/unit-memberships/{membership_id}/revoke": {
+      "post": {
+        "tags": [
+          "住戶資格與搬離"
+        ],
+        "operationId": "revoke_membership",
+        "summary": "取消搬離住戶資格",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body。取消資格、填 left_at 與 revoked_by，停用該入住批次舊邀請碼，須一起成功或失敗。其他同批次成員資格不變，不結束整戶入住；被取消者不得查詢或簽收。重試回傳既有結果，不再次覆寫或停用後來的新碼。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Membership"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "membership_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/parcels": {
+      "get": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "list_parcels",
+        "summary": "查詢包裹列表",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n管理員只看負責大樓；住戶只能看其有效資格、未結束批次內的包裹，同批次晚加入成員也可查看。不能只用 joined_at 過濾。搬離者與新批次住戶無權查看舊批次。排序 created_at 由新到舊，再按 id 由大到小。",
+        "x-roles": [
+          "大樓管理員",
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "building_id",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "unit_id",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 501
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "picked_up",
+                "exception",
+                "returned"
+              ],
+              "example": "pending"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "description": "搜尋物流、單號、戶號或收件人。",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "occupancy_id",
+            "in": "query",
+            "required": false,
+            "description": "依入住批次篩選，不擴大權限。",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 7
+            }
+          }
+        ],
+        "x-development-phase": 3
+      },
+      "post": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "create_parcel",
+        "summary": "登記包裹",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n傳入 occupancy_id，確認批次有效及管理員負責其大樓。管理員須核對收件人，不可只按戶號自動分配給新住戶。登記者與時間由系統取得，建立 pending 包裹並產生取件碼。物流、單號、位置、備註選填；回應不包含取件碼。\n同棟物流公司與單號均有值時比對既有包裹，不以狀態排除；遇相同資料且duplicate_confirmed不是true，回傳409及既有紀錄。管理員核對確認後重送可新增；缺任一值不比對。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parcel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "description": "疑似重複需確認，或其他資源狀態衝突。未確認時不得新增；前端先顯示existing_parcels再由管理員確認重送。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/DuplicateParcelWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParcelCreate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 3
+      }
+    },
+    "/api/parcels/{parcel_id}": {
+      "get": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "get_parcel",
+        "summary": "取得包裹詳情",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n住戶可透過 active_verification_id 得知有效的取件驗證，再查詢驗證進度。",
+        "x-roles": [
+          "大樓管理員",
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parcel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "parcel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      },
+      "patch": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "update_parcel",
+        "summary": "更正包裹登記資料",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n只更正 pending 或 exception 包裹；不可直接改 status、簽收者或登記時間。修正 occupancy_id 僅限同大樓有效批次且確認為登記錯誤，取消舊驗證並更換取件碼。來源批次已結束的包裹不得轉移給新住戶或恢復領取，須以異常流程退回。\n任何資料實際變動均在同一交易取消等待中的驗證；需重新核對再驗證。更改入住歸屬時換取件碼，其他更正保留碼。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parcel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "parcel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParcelUpdate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 3
+      }
+    },
+    "/api/parcels/{parcel_id}/pickup-code": {
+      "get": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "get_pickup_code",
+        "summary": "取得包裹取件碼",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 住戶\n\n僅有效且可查看此包裹的住戶能讀取。已領取、異常或退回時回傳 409。回應應帶 Cache-Control: no-store。取件碼不得由日誌或管理員一般列表洩漏。",
+        "x-roles": [
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupCode"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "parcel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/pickups": {
+      "get": {
+        "tags": [
+          "取件與電子簽收"
+        ],
+        "operationId": "list_pickups",
+        "summary": "查詢領取紀錄",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n管理員可查所屬大樓的歷史簽收。住戶只看有效資格所屬、尚未結束批次的簽收紀錄，晚加入的同批次家人可查看；已搬離或新批次不可看舊資料。顯示簽收當時保存的簽收者及經手管理員姓名。",
+        "x-roles": [
+          "大樓管理員",
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "building_id",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "unit_id",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 501
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-10-01"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-10-08"
+            }
+          },
+          {
+            "name": "occupancy_id",
+            "in": "query",
+            "required": false,
+            "description": "依入住批次篩選，不擴大權限。",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 7
+            }
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/pickup-verifications": {
+      "post": {
+        "tags": [
+          "取件與電子簽收"
+        ],
+        "operationId": "create_pickup_verification",
+        "summary": "驗證取件碼",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n檢查帳號啟用、大樓管理權、唯一有效取件碼、包裹 pending、入住批次有效。建立 10 分鐘驗證，包裹仍待領取，碼尚未失效。同包裹只有一筆有效驗證；同管理員重試回傳既有結果，另一管理員遇有效驗證回傳 409。過期需重新核對現場狀況再驗證。\n\n同一帳號對此類碼連續失敗5次，暫停對應驗證功能5分鐘，回傳429與Retry-After；不暫停其他功能或其他帳號。邀請碼驗證與確認加入共用失敗計數，取件碼另計。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupVerification"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationCreate"
+              }
+            }
+          }
+        },
+        "x-development-phase": 3
+      }
+    },
+    "/api/pickup-verifications/{verification_id}": {
+      "get": {
+        "tags": [
+          "取件與電子簽收"
+        ],
+        "operationId": "get_pickup_verification",
+        "summary": "查詢取件進度",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n僅經手管理員或有該包裹資格的住戶能查詢。可供畫面輪詢等待簽收，不回傳取件碼。",
+        "x-roles": [
+          "大樓管理員",
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupVerification"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/pickup-verifications/{verification_id}/confirm": {
+      "post": {
+        "tags": [
+          "取件與電子簽收"
+        ],
+        "operationId": "confirm_pickup",
+        "summary": "住戶確認收到包裹",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 住戶\n\n無需 request body。先檢查當下登入帳號啟用、resident、有效資格及未結束批次，資格批次須與包裹相同。新簽收再檢查驗證 awaiting_confirmation、未過期與包裹 pending。同一交易完成唯一簽收、保存簽收者及經手管理員當時姓名、包裹 picked_up、驗證 completed，使碼失效。簽收者取自登入帳號、時間由系統取得。驗證和簽收的 parcel_id 必須一致。同一簽收者在仍具存取權時重試回傳原成功結果；另一同戶成員回傳 409（已簽收）；已失去資格回傳 403。並行確認只能成功一次。未完成驗證過期回傳 410，須重新確認現場情況後再驗證。\n只由住戶本人確認，管理員不得代簽。現場未確認先留櫃檯；已交付未簽收先記錄異常並聯絡核對，恢復流程後仍由有資格的住戶確認，不能繞過入住或資格限制。",
+        "x-roles": [
+          "住戶"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pickup"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/pickup-verifications/{verification_id}/cancel": {
+      "post": {
+        "tags": [
+          "取件與電子簽收"
+        ],
+        "operationId": "cancel_pickup_verification",
+        "summary": "取消本次驗證",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n經手管理員可取消尚未完成的取件驗證；包裹仍待領取。已完成簽收不得取消。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupVerification"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/parcels/{parcel_id}/exception": {
+      "put": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "report_parcel_exception",
+        "summary": "記錄或更新最近一次異常",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n只供所屬大樓管理員操作未領取、未退回包裹。填原因後設 exception，記錄操作者與時間、清空前次處理結果，取消未完成取件驗證。同一交易完成；只保留最近一次，不建立獨立異常資料表。\n已交付但住戶未完成電子簽收時，可在既有異常原因中記錄並追蹤，不代表已完成簽收。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parcel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "parcel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionReport"
+              }
+            }
+          }
+        },
+        "x-development-phase": 3
+      }
+    },
+    "/api/parcels/{parcel_id}/exception/resolve": {
+      "post": {
+        "tags": [
+          "包裹管理"
+        ],
+        "operationId": "resolve_parcel_exception",
+        "summary": "處理最近一次異常",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n只接受 exception 包裹。pending 表示問題處理完成、恢復領取並更新取件碼；returned 表示已實際退回物流。填處理結果並記錄操作者、時間。入住批次已結束者只允許 returned，不能恢復領取。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parcel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "parcel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionResolution"
+              }
+            }
+          }
+        },
+        "x-development-phase": 3
+      }
+    },
+    "/api/units/{unit_id}/occupancies": {
+      "get": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "list_occupancies",
+        "summary": "查看戶別入住批次",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n管理員只可查看負責大樓內的戶別，包含目前與歷史批次。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccupancyPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "x-development-phase": 2
+      },
+      "post": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "create_occupancy",
+        "summary": "建立入住批次",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body。系統記錄 started_at、created_at；每戶同時間只能有一個有效批次。檢查與建立須在交易中防止並行重複。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Occupancy"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 2
+      }
+    },
+    "/api/occupancies/{occupancy_id}/end": {
+      "post": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "end_occupancy",
+        "summary": "結束整戶入住",
+        "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body。管理員先查詢未領包裹，再確認結束入住。同一交易：填 ended_at、撤銷所有未取消資格、停用邀請碼、取消未完成驗證，待領包裹標為 exception 並填搬離原因與操作者時間；既有異常補充搬離原因。已簽收、已退回者不改狀態。舊包裹保留批次歸屬，後續僅允許異常處理與退回，不允許搬離後領取。重試已結束批次不再覆寫紀錄。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Occupancy"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "occupancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 3
+      }
+    },
+    "/api/occupancies/{occupancy_id}/invite-codes": {
+      "get": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "list_invite_codes",
+        "summary": "查看邀請碼狀態與期限",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n只限負責大樓管理員；不回傳原碼或雜湊，顯示目前及歷史邀請碼的狀態、期限。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCodePage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "occupancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "x-development-phase": 2
+      },
+      "post": {
+        "tags": [
+          "戶別與邀請碼"
+        ],
+        "operationId": "create_invite_code",
+        "summary": "產生入住批次邀請碼",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body，不接受管理員自訂期限。系統產生四位數字字串（含開頭0），全系統有效碼唯一；expires_at 固定為 created_at 加24小時。有效入住才能產生；停用舊碼、建立新碼與唯一檢查一起成功或失敗。原碼只在成功回應顯示一次；可提早停用或重發，同戶多人使用，既有成員不受影響。碼空間不足時回傳409且保留原有效碼。",
+        "x-roles": [
+          "大樓管理員"
+        ],
+        "responses": {
+          "201": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCodeCreated"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "occupancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 2
+      }
+    },
+    "/api/buildings/{building_id}/admins/{user_id}": {
+      "delete": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "unassign_building_admin",
+        "summary": "取消管理員分配",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n取消現行分配後立即失去原大樓管理權；保留使用者帳號與過去經手紀錄。更換負責大樓時先取消原分配再指派新大樓。",
+        "x-roles": [
+          "系統管理員"
+        ],
+        "responses": {
+          "204": {
+            "description": "操作成功。"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
+        "x-development-phase": 2
+      }
+    },
+    "/api/building-admins": {
+      "get": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "list_admin_directory",
+        "summary": "查看所有大樓管理員",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n只供系統管理員的管理員管理畫面使用，包含已分配與未分配的building_admin帳號。操作者選姓名與大樓，前端保存並傳送user_id，不要求使用者輸入ID或Email。調任沿用先取消原分配再指派新大樓；第二步失敗需顯示未分配狀態並可重試，不能顯示調任成功。",
+        "x-roles": [
+          "系統管理員"
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDirectoryPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "x-development-phase": 2
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token",
+        "description": "登入由伺服器設定 HttpOnly Cookie，前端不自行指定簽收者。"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "FORBIDDEN"
+          },
+          "message": {
+            "type": "string",
+            "example": "你沒有權限執行此操作。"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "email"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Email 格式不正確。"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "操作成功。"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 12
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "resident@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "system_admin",
+              "building_admin",
+              "resident"
+            ],
+            "example": "resident"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone",
+          "email",
+          "role",
+          "created_at",
+          "is_active",
+          "updated_at"
+        ]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "resident@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "writeOnly": true,
+            "format": "password",
+            "example": "DemoPass2026!"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "resident@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "writeOnly": true,
+            "format": "password",
+            "example": "DemoPass2026!"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "Building": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "森光花園",
+            "maxLength": 100
+          },
+          "address": {
+            "type": "string",
+            "example": "台北市中山區森光路 18 號",
+            "maxLength": 255
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "phone",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "BuildingCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "森光花園"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "台北市中山區森光路 18 號"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "address"
+        ],
+        "additionalProperties": false
+      },
+      "BuildingUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "森光花園"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "台北市中山區森光路 18 號"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678",
+            "nullable": true
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "NewBuildingAdmin": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 20,
+            "example": "0912345678"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "resident@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "writeOnly": true,
+            "format": "password",
+            "example": "DemoPass2026!"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "ExistingBuildingAdmin": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 8,
+            "description": "必須為既有的大樓管理員帳號。"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "additionalProperties": false
+      },
+      "BuildingAdminAssign": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NewBuildingAdmin"
+          },
+          {
+            "$ref": "#/components/schemas/ExistingBuildingAdmin"
+          }
+        ],
+        "description": "二選一：提供新帳號資料，或提供既有管理員 user_id。不能同時提供。"
+      },
+      "BuildingAdmin": {
+        "type": "object",
+        "properties": {
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 3
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "building_id",
+          "user",
+          "id",
+          "created_at"
+        ]
+      },
+      "Unit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 501
+          },
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "floor": {
+            "type": "string",
+            "example": "5"
+          },
+          "unit_number": {
+            "type": "string",
+            "example": "A-501",
+            "maxLength": 20
+          },
+          "label": {
+            "type": "string",
+            "example": "A 棟 5 樓之 1"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "id",
+          "building_id",
+          "floor",
+          "unit_number",
+          "label",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UnitCreate": {
+        "type": "object",
+        "properties": {
+          "floor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "5"
+          },
+          "unit_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "A-501"
+          }
+        },
+        "required": [
+          "floor",
+          "unit_number"
+        ],
+        "additionalProperties": false
+      },
+      "UnitUpdate": {
+        "type": "object",
+        "properties": {
+          "floor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "5"
+          },
+          "unit_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "A-501"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "InviteCode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 21
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "expired",
+              "inactive"
+            ],
+            "example": "active"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "固定為created_at加24小時，由後端產生。",
+            "example": "2026-10-09T10:30:00+08:00"
+          },
+          "disabled_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          },
+          "created_by": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 8
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "id",
+          "occupancy_id",
+          "status",
+          "expires_at",
+          "disabled_at",
+          "created_by",
+          "created_at"
+        ],
+        "description": "不含原始碼或雜湊。status 是由停用時間、到期時間、批次是否結束推導的 API 欄位。"
+      },
+      "InviteInput": {
+        "type": "object",
+        "properties": {
+          "invite_code": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "minLength": 4,
+            "maxLength": 4,
+            "description": "四位數字字串，保留開頭的0。",
+            "example": "0382"
+          }
+        },
+        "required": [
+          "invite_code"
+        ],
+        "additionalProperties": false
+      },
+      "InvitationVerified": {
+        "type": "object",
+        "properties": {
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "building_name": {
+            "type": "string",
+            "example": "森光花園"
+          },
+          "unit_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 501
+          },
+          "unit_label": {
+            "type": "string",
+            "example": "A 棟 5 樓之 1"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          }
+        },
+        "required": [
+          "building_id",
+          "building_name",
+          "unit_id",
+          "unit_label",
+          "expires_at",
+          "occupancy_id"
+        ]
+      },
+      "Membership": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 45
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 12
+          },
+          "user_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "building_name": {
+            "type": "string",
+            "example": "森光花園"
+          },
+          "unit_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 501
+          },
+          "unit_label": {
+            "type": "string",
+            "example": "A 棟 5 樓之 1"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "exit_requested",
+              "revoked"
+            ],
+            "example": "active"
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "left_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "exit_requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          },
+          "revoked_by": {
+            "type": "integer",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "user_name",
+          "building_id",
+          "building_name",
+          "unit_id",
+          "unit_label",
+          "status",
+          "joined_at",
+          "left_at",
+          "occupancy_id",
+          "exit_requested_at",
+          "revoked_by"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "memberships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Membership"
+            }
+          },
+          "managed_building_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            }
+          }
+        },
+        "required": [
+          "user",
+          "memberships",
+          "managed_building_ids"
+        ]
+      },
+      "Parcel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 125
+          },
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "unit_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 501
+          },
+          "unit_label": {
+            "type": "string",
+            "example": "A 棟 5 樓之 1"
+          },
+          "recipient_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "tracking_number": {
+            "type": "string",
+            "nullable": true,
+            "example": "TC26007128"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "example": "外箱完整"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "picked_up",
+              "exception",
+              "returned"
+            ],
+            "example": "pending"
+          },
+          "created_by": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 8
+          },
+          "picked_up_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          },
+          "active_verification_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "example": 81,
+            "description": "有效的本次取件驗證 ID；未驗證、過期或完成後為 null。"
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "courier": {
+            "type": "string",
+            "nullable": true,
+            "example": "黑貓宅急便"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "storage_location": {
+            "type": "string",
+            "nullable": true,
+            "example": "A 架第 2 層"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "exception_reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "exception_reported_by": {
+            "type": "integer",
+            "nullable": true
+          },
+          "exception_reported_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          },
+          "resolution_note": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolved_by": {
+            "type": "integer",
+            "nullable": true
+          },
+          "resolved_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "building_id",
+          "unit_id",
+          "unit_label",
+          "recipient_name",
+          "tracking_number",
+          "note",
+          "status",
+          "created_by",
+          "picked_up_at",
+          "active_verification_id",
+          "occupancy_id",
+          "courier",
+          "created_at",
+          "storage_location",
+          "updated_at",
+          "exception_reason",
+          "exception_reported_by",
+          "exception_reported_at",
+          "resolution_note",
+          "resolved_by",
+          "resolved_at"
+        ],
+        "description": "大樓、戶別、簽收時間與有效驗證 ID 為關聯／衍生欄位。只保留最近一次異常資料，不回傳取件碼密文。"
+      },
+      "ParcelCreate": {
+        "type": "object",
+        "properties": {
+          "recipient_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "tracking_number": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "TC26007128"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "example": "外箱完整"
+          },
+          "courier": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "黑貓宅急便"
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "storage_location": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "A 架第 2 層"
+          },
+          "duplicate_confirmed": {
+            "type": "boolean",
+            "default": false,
+            "description": "管理員看過同棟相同物流與單號的既有紀錄並確認後才送true；不是一般表單預設值，不擴大權限。"
+          }
+        },
+        "required": [
+          "occupancy_id",
+          "recipient_name"
+        ],
+        "additionalProperties": false
+      },
+      "ParcelUpdate": {
+        "type": "object",
+        "properties": {
+          "recipient_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "tracking_number": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "TC26007128"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "example": "外箱完整"
+          },
+          "courier": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "黑貓宅急便"
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "storage_location": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "A 架第 2 層"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "PickupCode": {
+        "type": "object",
+        "properties": {
+          "parcel_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 125
+          },
+          "pickup_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "description": "須保留字串型別，避免開頭的 0 消失。",
+            "example": "582913"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "pickup_code"
+        ]
+      },
+      "VerificationCreate": {
+        "type": "object",
+        "properties": {
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1,
+            "description": "管理員本次正在操作的大樓。"
+          },
+          "pickup_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "example": "582913"
+          }
+        },
+        "required": [
+          "building_id",
+          "pickup_code"
+        ],
+        "additionalProperties": false
+      },
+      "PickupVerification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 81
+          },
+          "parcel_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 125
+          },
+          "unit_label": {
+            "type": "string",
+            "example": "A 棟 5 樓之 1"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "awaiting_confirmation",
+              "completed",
+              "expired",
+              "cancelled"
+            ],
+            "example": "awaiting_confirmation"
+          },
+          "verified_by": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 8
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:40:00+08:00"
+          },
+          "pickup_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "example": null
+          },
+          "courier": {
+            "type": "string",
+            "nullable": true,
+            "example": "黑貓宅急便"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "id",
+          "parcel_id",
+          "unit_label",
+          "courier",
+          "status",
+          "verified_by",
+          "verified_at",
+          "expires_at",
+          "pickup_id",
+          "updated_at"
+        ]
+      },
+      "Pickup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 33
+          },
+          "parcel_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 125
+          },
+          "verification_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 81
+          },
+          "unit_label": {
+            "type": "string",
+            "example": "A 棟 5 樓之 1"
+          },
+          "tracking_number": {
+            "type": "string",
+            "example": "TC26007128",
+            "nullable": true
+          },
+          "handled_by": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 8
+          },
+          "handled_by_name": {
+            "type": "string",
+            "example": "陳怡安"
+          },
+          "occupancy_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "courier": {
+            "type": "string",
+            "example": "黑貓宅急便",
+            "nullable": true
+          },
+          "picked_up_by": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 12,
+            "description": "由登入身分取得，不接受前端指定。"
+          },
+          "picked_up_by_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "李佳穎"
+          },
+          "picked_up_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "building_name": {
+            "type": "string",
+            "example": "森光花園"
+          },
+          "floor": {
+            "type": "string",
+            "example": "5"
+          },
+          "recipient_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50,
+            "example": "李佳穎"
+          }
+        },
+        "required": [
+          "id",
+          "parcel_id",
+          "verification_id",
+          "unit_label",
+          "courier",
+          "tracking_number",
+          "picked_up_by",
+          "picked_up_by_name",
+          "handled_by",
+          "handled_by_name",
+          "picked_up_at",
+          "occupancy_id",
+          "building_name",
+          "floor",
+          "recipient_name"
+        ],
+        "description": "簽收者與經手管理員姓名取自簽收當時保存的姓名快照，之後改名不影響歷史；帳號 ID 保留。大樓名稱、樓層、戶號、收件人、單號及物流顯示目前關聯資料，不保存當時快照。"
+      },
+      "BuildingPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Building"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "BuildingAdminPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingAdmin"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "UnitPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "InviteCodePage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteCode"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "MembershipPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Membership"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "ParcelPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Parcel"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "PickupPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Pickup"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "Occupancy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 7
+          },
+          "unit_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 501
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          },
+          "ended_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": null,
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-08T10:30:00+08:00"
+          }
+        },
+        "required": [
+          "id",
+          "unit_id",
+          "started_at",
+          "ended_at",
+          "created_at"
+        ]
+      },
+      "OccupancyPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Occupancy"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "InviteCodeCreated": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InviteCode"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[0-9]{4}$",
+                "description": "只在成功產生時顯示一次；清單和後續查詢不回傳。",
+                "example": "0382"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          }
+        ]
+      },
+      "ExceptionReport": {
+        "type": "object",
+        "properties": {
+          "exception_reason": {
+            "type": "string",
+            "minLength": 1,
+            "example": "外箱破損，等待處理。"
+          }
+        },
+        "required": [
+          "exception_reason"
+        ],
+        "additionalProperties": false
+      },
+      "ExceptionResolution": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "returned"
+            ],
+            "example": "pending"
+          },
+          "resolution_note": {
+            "type": "string",
+            "minLength": 1,
+            "example": "已實際退回物流。"
+          }
+        },
+        "required": [
+          "status",
+          "resolution_note"
+        ],
+        "additionalProperties": false
+      },
+      "AdminDirectoryEntry": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 8
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50,
+            "example": "李佳穎"
+          },
+          "building_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "example": null
+          },
+          "building_name": {
+            "type": "string",
+            "nullable": true,
+            "example": "森光花園"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "building_id",
+          "building_name"
+        ]
+      },
+      "AdminDirectoryPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminDirectoryEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ]
+      },
+      "DuplicateParcelWarning": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "DUPLICATE_PARCEL_CONFIRMATION_REQUIRED"
+            ],
+            "example": "DUPLICATE_PARCEL_CONFIRMATION_REQUIRED"
+          },
+          "message": {
+            "type": "string",
+            "example": "已有相同物流公司與單號，請核對後確認是否新增。"
+          },
+          "existing_parcels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Parcel"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "existing_parcels"
+        ]
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "邀請碼或取件碼無效。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "INVALID_CODE",
+              "message": "邀請碼或取件碼無效。"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "請先登入，或帳號密碼不正確。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "UNAUTHENTICATED",
+              "message": "請先登入，或帳號密碼不正確。"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "你沒有權限執行此操作。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "FORBIDDEN",
+              "message": "你沒有權限執行此操作。"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "找不到資料。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "NOT_FOUND",
+              "message": "找不到資料。"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "資料重複，或目前狀態不允許此操作。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "CONFLICT",
+              "message": "資料重複，或目前狀態不允許此操作。"
+            }
+          }
+        }
+      },
+      "Error410": {
+        "description": "取件驗證已過期，請重新驗證。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "VERIFICATION_EXPIRED",
+              "message": "取件驗證已過期，請重新驗證。"
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "輸入資料格式不正確。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "VALIDATION_ERROR",
+              "message": "輸入資料格式不正確。"
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "嘗試次數過多，請稍後再試。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "TOO_MANY_REQUESTS",
+              "message": "嘗試次數過多，請稍後再試。"
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "距離可重試的剩餘秒數。",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "Error500": {
+        "description": "系統暫時無法完成操作。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "INTERNAL_ERROR",
+              "message": "系統暫時無法完成操作。"
+            }
+          }
+        }
+      }
+    }
+  }
+}</script>
+<script>
+const spec=JSON.parse(document.getElementById('spec').textContent);
+const fallback=document.getElementById('fallback');
+for(const tag of spec.tags){const section=document.createElement('section');const h=document.createElement('h2');h.textContent=tag.name;section.append(h);for(const [path,methods] of Object.entries(spec.paths)){for(const [method,op] of Object.entries(methods)){if(!op.tags.includes(tag.name))continue;const d=document.createElement('details'),s=document.createElement('summary'),p=document.createElement('p'),pre=document.createElement('pre');s.textContent=method.toUpperCase()+' '+path+' — '+op.summary;p.textContent=op.description;pre.textContent=JSON.stringify(op,null,2);d.append(s,p,pre);section.append(d)}}fallback.append(section)}
+document.getElementById('download').onclick=()=>{const u=URL.createObjectURL(new Blob([JSON.stringify(spec,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download='openapi.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+function showSwagger(){if(!window.SwaggerUIBundle)return;window.ui=SwaggerUIBundle({spec,dom_id:'#swagger-ui',deepLinking:true,filter:true,docExpansion:'list',displayRequestDuration:false,defaultModelsExpandDepth:-1,supportedSubmitMethods:[],validatorUrl:null,presets:[SwaggerUIBundle.presets.apis],onComplete:()=>{fallback.hidden=true}})}
+</script><script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" onload="showSwagger()" onerror="document.querySelector('#fallback p').textContent='Swagger UI 未能載入。以下是可離線查看的 API 摘要；完整規格也可下載。'"></script></body></html>

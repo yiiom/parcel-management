@@ -1,0 +1,67 @@
+{
+  "F-01": [
+    "register_resident",
+    "login",
+    "logout",
+    "get_me"
+  ],
+  "F-02": [
+    "update_me"
+  ],
+  "F-03": [
+    "list_buildings",
+    "create_building",
+    "get_building",
+    "update_building"
+  ],
+  "F-04": [
+    "assign_building_admin",
+    "list_building_admins",
+    "unassign_building_admin",
+    "list_admin_directory"
+  ],
+  "F-05": [
+    "list_units",
+    "create_unit",
+    "update_unit",
+    "list_occupancies",
+    "create_occupancy"
+  ],
+  "F-06": [
+    "verify_unit_invitation",
+    "join_unit",
+    "list_invite_codes",
+    "create_invite_code",
+    "deactivate_invite_code",
+    "list_memberships"
+  ],
+  "F-07": [
+    "create_parcel",
+    "update_parcel"
+  ],
+  "F-08": [
+    "list_parcels",
+    "get_parcel"
+  ],
+  "F-09": [
+    "get_pickup_code",
+    "create_pickup_verification",
+    "get_pickup_verification",
+    "confirm_pickup",
+    "cancel_pickup_verification"
+  ],
+  "F-10": [
+    "list_pickups"
+  ],
+  "F-11": [
+    "report_parcel_exception",
+    "resolve_parcel_exception"
+  ],
+  "F-12": [
+    "request_exit",
+    "revoke_membership"
+  ],
+  "F-13": [
+    "end_occupancy"
+  ]
+}
