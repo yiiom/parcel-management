@@ -12,7 +12,8 @@
     "list_buildings",
     "create_building",
     "get_building",
-    "update_building"
+    "update_building",
+    "delete_building"
   ],
   "F-04": [
     "assign_building_admin",

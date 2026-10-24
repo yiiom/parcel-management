@@ -9,12 +9,12 @@
   "info": {
     "title": "寓收｜大樓包裹管理系統 API",
     "version": "0.4.0-draft",
-    "description": "大樓包裹管理系統 API 設計草案。**這是文件，尚未實作後端。**\n\n依 docs/business-rules.md 與 docs/open-questions.md 開發；第一階段確認規則，第二階段基本功能，第三階段主要功能。Q-01～Q-10已確認，見 docs/decisions.md；後續技術方案仍按T清單驗證。\n\n## 使用流程\n1. 註冊 → 登入 → 驗證戶別邀請碼 → 確認加入戶別。\n2. 管理員登記包裹 → 住戶查看取件碼 → 管理員驗證 → 住戶收到實物後確認 → 取件碼失效。\n3. 住戶退出申請 → 管理員確認搬離 → 取消資格並停用舊邀請碼。\n\n## 已確認的功能規則\n- 角色：system_admin / building_admin / resident；大樓範圍與住戶資格每次由後端檢查，不能只相信 JWT 內的舊資格。\n- 每位住戶同時只有一個有效戶別；退出申請中仍算有效，取消後失去所有原戶資料權限。\n- 同戶同入住批次成員共同查看包裹；晚加入的家人也可查看。新批次住戶與已搬離者不能看舊資料，不以 joined_at 作為唯一過濾條件。\n- 管理員驗證不等於領取完成。驗證 10 分鐘有效；住戶確認成功後才保存簽收、使碼失效。重複與並行確認不能產生兩筆簽收。\n- 每戶同時間只有一個有效入住批次。整戶搬離時一起結束批次、撤銷資格、停用邀請碼、取消驗證並將未領包裹列為異常。舊批次包裹只處理退回，不提供搬離後領取。\n- 邀請碼只在產生時回傳原碼一次，之後只看期限與狀態。有效期間可供同批次多人使用，重新產生停用舊碼。\n- 異常只記錄最近一次，存在包裹資料內，沒有獨立異常歷程表。\n- 一位大樓管理員同時間只管理一棟大樓，同棟可有多位管理員。\n\n## API 契約與已確認碼規則\n- 清單採 page / page_size，回傳 items / total / page / page_size；時間用含時區的 ISO 8601。\n- 邀請碼四位數、全系統有效碼唯一、固定24小時；取件碼六位數、同棟有效碼唯一，均為字串。兩種碼各連錯5次，暫停該帳號對應驗證5分鐘。\n\n## 登入及安全\n使用 access_token HttpOnly Cookie。正式環境需 HTTPS、Secure、SameSite 和狀態變更請求的 CSRF／Origin 防護。Cookie 名稱為本草案預設。Swagger 預覽關閉 Try it out，避免對尚未存在的服務送出請求。每個受保護請求都重新檢查帳號啟用與當下權限。\n\n## 前端同步\n包裹詳情提供 active_verification_id。住戶與經手管理員可查驗證進度；第一版可輪詢，未宣稱已具備即時推送。\n\n## 補充\n本規格的統一錯誤格式需在 FastAPI 中實作對應例外處理；不是 FastAPI 預設 validation 回應。邀請碼存雜湊，取件碼存加密資料，但皆不回傳保存值。一般顯示資訊可由關聯取得；簽收者與經手管理員姓名須保存簽收當時快照。加密與雜湊的查找、唯一限制與交易實作仍須依資料庫設計文件核對。\n"
+    "description": "大樓包裹管理系統 API 規格。**40 個後端操作；各項實作與驗收證據見開發計畫；2A 以外的前端及整體串接待完成。依 D-26 先完成 DB／後端；進度以 development-plan.md 為準。**\n\n依 docs/business-rules.md 與 docs/open-questions.md 開發；第一階段確認規則，第二階段基本功能，第三階段主要功能。Q-01～Q-10已確認，見 docs/decisions.md；後續技術方案仍按T清單驗證。\n\n## 使用流程\n1. 註冊 → 登入 → 驗證戶別邀請碼 → 確認加入戶別。\n2. 管理員登記包裹 → 住戶查看取件碼 → 管理員驗證 → 住戶收到實物後確認 → 取件碼失效。\n3. 住戶退出申請 → 管理員確認搬離 → 取消資格並停用舊邀請碼。\n\n## 已確認的功能規則\n- 角色：system_admin / building_admin / resident；大樓範圍與住戶資格每次由後端檢查，不能只相信 JWT 內的舊資格。\n- 每位住戶同時只有一個有效戶別；退出申請中仍算有效，取消後失去所有原戶資料權限。\n- 同戶同入住批次成員共同查看包裹；晚加入的家人也可查看。新批次住戶與已搬離者不能看舊資料，不以 joined_at 作為唯一過濾條件。\n- 管理員驗證不等於領取完成。驗證 10 分鐘有效；住戶確認成功後才保存簽收、使碼失效。重複與並行確認不能產生兩筆簽收。\n- 每戶同時間只有一個有效入住批次。整戶搬離時一起結束批次、撤銷資格、停用邀請碼、取消驗證並將未領包裹列為異常。舊批次包裹只處理退回，不提供搬離後領取。\n- 邀請碼只在產生時回傳原碼一次，之後只看期限與狀態。有效期間可供同批次多人使用，重新產生停用舊碼。\n- 異常只記錄最近一次，存在包裹資料內，沒有獨立異常歷程表。\n- 一位大樓管理員同時間只管理一棟大樓，同棟可有多位管理員。\n\n## API 契約與已確認碼規則\n- 清單採 page / page_size，回傳 items / total / page / page_size；時間用含時區的 ISO 8601。\n- 邀請碼四位數、全系統有效碼唯一、固定24小時；取件碼六位數、同棟有效碼唯一，均為字串。兩種碼各連錯5次，暫停該帳號對應驗證5分鐘。\n\n## 登入及安全\n使用 access_token HttpOnly Cookie。正式環境需 HTTPS、Secure、SameSite 和狀態變更請求的 CSRF／Origin 防護。Cookie 名稱為本草案預設。Swagger 預覽關閉 Try it out，避免對尚未存在的服務送出請求。每個受保護請求都重新檢查帳號啟用與當下權限。\n\n## 前端同步\n包裹詳情提供 active_verification_id。住戶與經手管理員可查驗證進度；第一版可輪詢，未宣稱已具備即時推送。\n\n## 補充\n本規格的統一錯誤格式需在 FastAPI 中實作對應例外處理；不是 FastAPI 預設 validation 回應。邀請碼存雜湊，取件碼存加密資料，但皆不回傳保存值。一般顯示資訊可由關聯取得；簽收者與經手管理員姓名須保存簽收當時快照。加密與雜湊的查找、唯一限制與交易實作仍須依資料庫設計文件核對。\n"
   },
   "servers": [
     {
       "url": "http://localhost:8001",
-      "description": "預計使用的本機 FastAPI（尚未實作）"
+      "description": "本機 FastAPI（40 個業務操作）"
     }
   ],
   "tags": [
@@ -50,7 +50,7 @@
         ],
         "operationId": "register_resident",
         "summary": "註冊住戶帳號",
-        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n公開註冊固定建立 resident 角色；不接受 role 或戶別資格。註冊後呼叫登入，再使用邀請碼加入戶別。",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n公開註冊固定建立 resident 角色；不接受 role 或戶別資格。註冊後呼叫登入，再使用邀請碼加入戶別。\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。\n註冊依來源 IP 與正規化 Email 分別限制每小時 10 次（含成功），超限回傳 429 與 Retry-After。",
         "x-roles": [],
         "responses": {
           "201": {
@@ -74,6 +74,9 @@
           },
           "500": {
             "$ref": "#/components/responses/Error500"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
           }
         },
         "requestBody": {
@@ -97,7 +100,7 @@
         ],
         "operationId": "login",
         "summary": "登入",
-        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n驗證Email、密碼與帳號啟用；HttpOnly Cookie登入自成功起8小時有效，到期重新登入。各裝置獨立，不回傳密碼或JWT。",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n驗證Email、密碼與帳號啟用；HttpOnly Cookie登入自成功起8小時有效，到期重新登入。各裝置獨立，不回傳密碼或JWT。\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。\n登入依來源 IP 與正規化 Email 分別限制每 5 分鐘 20 次（含成功），超限回傳 429 與 Retry-After。",
         "x-roles": [],
         "responses": {
           "200": {
@@ -130,6 +133,9 @@
           },
           "500": {
             "$ref": "#/components/responses/Error500"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
           }
         },
         "requestBody": {
@@ -153,7 +159,7 @@
         ],
         "operationId": "logout",
         "summary": "登出",
-        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n使目前裝置當次登入在後端失效並清除Cookie；其他裝置不受影響。重複登出仍成功，不可只清除前端Cookie卻保留可用的原憑證。",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n使目前裝置當次登入在後端失效並清除Cookie；其他裝置不受影響。重複登出仍成功，不可只清除前端Cookie卻保留可用的原憑證。\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。",
         "x-roles": [],
         "responses": {
           "204": {
@@ -172,6 +178,9 @@
           },
           "500": {
             "$ref": "#/components/responses/Error500"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
           }
         },
         "security": [],
@@ -185,7 +194,7 @@
         ],
         "operationId": "get_me",
         "summary": "取得自己的帳號與資格",
-        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n僅回傳目前登入者；退出申請中仍有資格，revoked 不具有包裹存取權。",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n僅回傳目前登入者；退出申請中仍有資格，revoked 不具有包裹存取權。\n2B／2D 已接上實際查詢：memberships 只包含本人尚未結束入住的 active／exit_requested 資格；managed_building_ids 為目前管理分配。空陣列代表當下沒有對應關聯。",
         "x-roles": [
           "系統管理員",
           "大樓管理員",
@@ -223,7 +232,7 @@
         ],
         "operationId": "update_me",
         "summary": "修改個人資料",
-        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n只允許姓名與電話；角色與戶別資格不可透過本 API 修改。",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n只允許姓名與電話；角色與戶別資格不可透過本 API 修改。\n寫入請求須攜帶允許的 Origin；缺少或不受信任來源回傳 403。",
         "x-roles": [
           "系統管理員",
           "大樓管理員",
@@ -500,6 +509,54 @@
             }
           }
         },
+        "x-development-phase": 2
+      },
+      "delete": {
+        "tags": [
+          "大樓與管理員"
+        ],
+        "operationId": "delete_building",
+        "summary": "刪除空白大樓",
+        "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n僅系統管理員可刪除；有管理員分配、戶別或任何業務紀錄回傳 409，不存在回傳 404，不連帶刪除。",
+        "x-roles": [
+          "系統管理員"
+        ],
+        "responses": {
+          "204": {
+            "description": "操作成功。"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            },
+            "description": "資源唯一編號。"
+          }
+        ],
         "x-development-phase": 2
       }
     },
@@ -2633,6 +2690,7 @@
           "email": {
             "type": "string",
             "format": "email",
+            "maxLength": 255,
             "example": "resident@example.com"
           },
           "role": {
@@ -2688,6 +2746,7 @@
           "email": {
             "type": "string",
             "format": "email",
+            "maxLength": 255,
             "example": "resident@example.com"
           },
           "password": {
@@ -2713,6 +2772,7 @@
           "email": {
             "type": "string",
             "format": "email",
+            "maxLength": 255,
             "example": "resident@example.com"
           },
           "password": {
@@ -2780,6 +2840,10 @@
             "format": "date-time",
             "example": "2026-10-08T10:30:00+08:00"
           },
+          "can_delete": {
+            "type": "boolean",
+            "description": "目前帳號為系統管理員且大樓無管理員分配、戶別及業務紀錄時為 true；刪除時仍須重新檢查。"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time",
@@ -2792,6 +2856,7 @@
           "address",
           "phone",
           "created_at",
+          "can_delete",
           "updated_at"
         ]
       },
@@ -2869,6 +2934,7 @@
           "email": {
             "type": "string",
             "format": "email",
+            "maxLength": 255,
             "example": "resident@example.com"
           },
           "password": {
@@ -3687,7 +3753,7 @@
           "recipient_name": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 50,
+            "maxLength": 100,
             "example": "李佳穎"
           }
         },
@@ -4081,7 +4147,7 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 50,
+            "maxLength": 100,
             "example": "李佳穎"
           },
           "building_id": {

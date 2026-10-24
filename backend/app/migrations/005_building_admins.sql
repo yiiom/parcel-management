@@ -1,0 +1,6 @@
+CREATE TABLE building_admins (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id BIGINT NOT NULL UNIQUE, building_id BIGINT NOT NULL,
+ created_at DATETIME(6) NOT NULL,
+ FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (building_id) REFERENCES buildings(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

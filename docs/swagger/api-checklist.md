@@ -10,7 +10,7 @@ Q-01～Q-10已確認；決議及技術待辦見 [確認清單](../open-questions
 
 確認規則與文件。
 
-## 第 2 階段 共 24 個操作
+## 第 2 階段 共 25 個操作
 
 | 功能 | 方法與路徑 | 操作 | operationId |
 |---|---|---|---|
@@ -38,6 +38,7 @@ Q-01～Q-10已確認；決議及技術待辦見 [確認清單](../open-questions
 | F-06 | `POST /api/invite-codes/{code_id}/deactivate` | 停用邀請碼 | `deactivate_invite_code` |
 | F-06 | `GET /api/buildings/{building_id}/memberships` | 查看住戶與退出申請 | `list_memberships` |
 | F-04 | `GET /api/building-admins` | 查看所有大樓管理員 | `list_admin_directory` |
+| F-03 | `DELETE /api/buildings/{building_id}` | 刪除空白大樓 | `delete_building` |
 
 ## 第 3 階段 共 15 個操作
 

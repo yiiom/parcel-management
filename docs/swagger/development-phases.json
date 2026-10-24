@@ -24,7 +24,8 @@
     "create_invite_code",
     "deactivate_invite_code",
     "list_memberships",
-    "list_admin_directory"
+    "list_admin_directory",
+    "delete_building"
   ],
   "3": [
     "create_parcel",

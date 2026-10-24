@@ -1,0 +1,382 @@
+{
+  "/api/auth/register": {
+    "post": {
+      "operationId": "register_resident",
+      "summary": "註冊住戶帳號",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n公開註冊固定建立 resident 角色；不接受 role 或戶別資格。註冊後呼叫登入，再使用邀請碼加入戶別。\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。\n註冊依來源 IP 與正規化 Email 分別限制每小時 10 次（含成功），超限回傳 429 與 Retry-After。",
+      "tags": [
+        "帳號與登入"
+      ]
+    }
+  },
+  "/api/auth/login": {
+    "post": {
+      "operationId": "login",
+      "summary": "登入",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n驗證Email、密碼與帳號啟用；HttpOnly Cookie登入自成功起8小時有效，到期重新登入。各裝置獨立，不回傳密碼或JWT。\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。\n登入依來源 IP 與正規化 Email 分別限制每 5 分鐘 20 次（含成功），超限回傳 429 與 Retry-After。",
+      "tags": [
+        "帳號與登入"
+      ]
+    }
+  },
+  "/api/auth/logout": {
+    "post": {
+      "operationId": "logout",
+      "summary": "登出",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 未登入者亦可\n\n使目前裝置當次登入在後端失效並清除Cookie；其他裝置不受影響。重複登出仍成功，不可只清除前端Cookie卻保留可用的原憑證。\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。",
+      "tags": [
+        "帳號與登入"
+      ]
+    }
+  },
+  "/api/users/me": {
+    "get": {
+      "operationId": "get_me",
+      "summary": "取得自己的帳號與資格",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n僅回傳目前登入者；退出申請中仍有資格，revoked 不具有包裹存取權。\n2B／2D 已接上實際查詢：memberships 只包含本人尚未結束入住的 active／exit_requested 資格；managed_building_ids 為目前管理分配。空陣列代表當下沒有對應關聯。",
+      "tags": [
+        "帳號與登入"
+      ]
+    },
+    "patch": {
+      "operationId": "update_me",
+      "summary": "修改個人資料",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員、住戶\n\n只允許姓名與電話；角色與戶別資格不可透過本 API 修改。\n寫入請求須攜帶允許的 Origin；缺少或不受信任來源回傳 403。",
+      "tags": [
+        "帳號與登入"
+      ]
+    }
+  },
+  "/api/buildings": {
+    "get": {
+      "operationId": "list_buildings",
+      "summary": "取得可管理的大樓",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員\n\n系統管理員可查看全部；大樓管理員只看到被指派的大樓。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    },
+    "post": {
+      "operationId": "create_building",
+      "summary": "建立大樓",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n建立大樓基本資料。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    }
+  },
+  "/api/buildings/{building_id}": {
+    "get": {
+      "operationId": "get_building",
+      "summary": "取得大樓資料",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員\n\n大樓管理員需具有該大樓管理資格。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    },
+    "patch": {
+      "operationId": "update_building",
+      "summary": "修改大樓資料",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員、大樓管理員\n\n檢查角色與大樓範圍。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    },
+    "delete": {
+      "operationId": "delete_building",
+      "summary": "刪除空白大樓",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n僅系統管理員可刪除；有管理員分配、戶別或任何業務紀錄回傳 409，不存在回傳 404，不連帶刪除。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    }
+  },
+  "/api/buildings/{building_id}/admins": {
+    "post": {
+      "operationId": "assign_building_admin",
+      "summary": "建立或指派大樓管理員",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n建立新管理員或指派既有 building_admin 帳號。一人同時間只能負責一棟大樓；已分配任一大樓時回傳 409。同棟可有多位管理員。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    },
+    "get": {
+      "operationId": "list_building_admins",
+      "summary": "查看大樓管理員",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n只供系統管理員查看。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    }
+  },
+  "/api/buildings/{building_id}/units": {
+    "get": {
+      "operationId": "list_units",
+      "summary": "查看樓層與戶號",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n只回傳所屬大樓戶別，不回傳邀請碼。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    },
+    "post": {
+      "operationId": "create_unit",
+      "summary": "建立戶別",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n同棟大樓的 unit_number 不可重複。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/units/{unit_id}": {
+    "patch": {
+      "operationId": "update_unit",
+      "summary": "更正戶別資料",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n只更正樓層與戶號，不改變戶別所屬大樓或居住成員。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/invite-codes/{code_id}/deactivate": {
+    "post": {
+      "operationId": "deactivate_invite_code",
+      "summary": "停用邀請碼",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n重複停用回傳相同的 inactive 結果。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/unit-invitations/verify": {
+    "post": {
+      "operationId": "verify_unit_invitation",
+      "summary": "驗證戶別邀請碼",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 住戶\n\n僅顯示大樓、戶別與期限，不取得包裹查看權。錯誤、過期及已停用邀請碼統一回傳 INVALID_INVITE_CODE。\n\n同一帳號對此類碼連續失敗5次，暫停對應驗證功能5分鐘，回傳429與Retry-After；不暫停其他功能或其他帳號。邀請碼驗證與確認加入共用失敗計數，取件碼另計。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/unit-memberships": {
+    "post": {
+      "operationId": "join_unit",
+      "summary": "確認加入戶別",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 住戶\n\n確認加入時重新檢查：帳號啟用、resident 角色、邀請碼有效、批次未結束。每人只准一筆 active 或 exit_requested 資格；同批次重試回傳既有資格（200），其他戶衝突回傳 409。檢查與建立須防止並行加入兩戶。不接受前端指定 user_id 或 occupancy_id。\n\n同一帳號對此類碼連續失敗5次，暫停對應驗證功能5分鐘，回傳429與Retry-After；不暫停其他功能或其他帳號。邀請碼驗證與確認加入共用失敗計數，取件碼另計。\n已取消資格者取得新有效碼且無其他有效資格可建立新紀錄；保留舊資格，不增加封鎖名單。",
+      "tags": [
+        "住戶資格與搬離"
+      ]
+    }
+  },
+  "/api/buildings/{building_id}/memberships": {
+    "get": {
+      "operationId": "list_memberships",
+      "summary": "查看住戶與退出申請",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n檢查管理員所屬大樓。",
+      "tags": [
+        "住戶資格與搬離"
+      ]
+    }
+  },
+  "/api/unit-memberships/{membership_id}/exit-request": {
+    "post": {
+      "operationId": "request_exit",
+      "summary": "提出退出申請",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 住戶\n\n住戶只能對自己的有效資格提出申請。管理員確認前仍維持原本存取權；重複申請回傳既有 exit_requested 狀態。",
+      "tags": [
+        "住戶資格與搬離"
+      ]
+    }
+  },
+  "/api/unit-memberships/{membership_id}/revoke": {
+    "post": {
+      "operationId": "revoke_membership",
+      "summary": "取消搬離住戶資格",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body。取消資格、填 left_at 與 revoked_by，停用該入住批次舊邀請碼，須一起成功或失敗。其他同批次成員資格不變，不結束整戶入住；被取消者不得查詢或簽收。重試回傳既有結果，不再次覆寫或停用後來的新碼。",
+      "tags": [
+        "住戶資格與搬離"
+      ]
+    }
+  },
+  "/api/parcels": {
+    "get": {
+      "operationId": "list_parcels",
+      "summary": "查詢包裹列表",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n管理員只看負責大樓；住戶只能看其有效資格、未結束批次內的包裹，同批次晚加入成員也可查看。不能只用 joined_at 過濾。搬離者與新批次住戶無權查看舊批次。排序 created_at 由新到舊，再按 id 由大到小。",
+      "tags": [
+        "包裹管理"
+      ]
+    },
+    "post": {
+      "operationId": "create_parcel",
+      "summary": "登記包裹",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n傳入 occupancy_id，確認批次有效及管理員負責其大樓。管理員須核對收件人，不可只按戶號自動分配給新住戶。登記者與時間由系統取得，建立 pending 包裹並產生取件碼。物流、單號、位置、備註選填；回應不包含取件碼。\n同棟物流公司與單號均有值時比對既有包裹，不以狀態排除；遇相同資料且duplicate_confirmed不是true，回傳409及既有紀錄。管理員核對確認後重送可新增；缺任一值不比對。",
+      "tags": [
+        "包裹管理"
+      ]
+    }
+  },
+  "/api/parcels/{parcel_id}": {
+    "get": {
+      "operationId": "get_parcel",
+      "summary": "取得包裹詳情",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n住戶可透過 active_verification_id 得知有效的取件驗證，再查詢驗證進度。",
+      "tags": [
+        "包裹管理"
+      ]
+    },
+    "patch": {
+      "operationId": "update_parcel",
+      "summary": "更正包裹登記資料",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n只更正 pending 或 exception 包裹；不可直接改 status、簽收者或登記時間。修正 occupancy_id 僅限同大樓有效批次且確認為登記錯誤，取消舊驗證並更換取件碼。來源批次已結束的包裹不得轉移給新住戶或恢復領取，須以異常流程退回。\n任何資料實際變動均在同一交易取消等待中的驗證；需重新核對再驗證。更改入住歸屬時換取件碼，其他更正保留碼。",
+      "tags": [
+        "包裹管理"
+      ]
+    }
+  },
+  "/api/parcels/{parcel_id}/pickup-code": {
+    "get": {
+      "operationId": "get_pickup_code",
+      "summary": "取得包裹取件碼",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 住戶\n\n僅有效且可查看此包裹的住戶能讀取。已領取、異常或退回時回傳 409。回應應帶 Cache-Control: no-store。取件碼不得由日誌或管理員一般列表洩漏。",
+      "tags": [
+        "包裹管理"
+      ]
+    }
+  },
+  "/api/pickups": {
+    "get": {
+      "operationId": "list_pickups",
+      "summary": "查詢領取紀錄",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n管理員可查所屬大樓的歷史簽收。住戶只看有效資格所屬、尚未結束批次的簽收紀錄，晚加入的同批次家人可查看；已搬離或新批次不可看舊資料。顯示簽收當時保存的簽收者及經手管理員姓名。",
+      "tags": [
+        "取件與電子簽收"
+      ]
+    }
+  },
+  "/api/pickup-verifications": {
+    "post": {
+      "operationId": "create_pickup_verification",
+      "summary": "驗證取件碼",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n檢查帳號啟用、大樓管理權、唯一有效取件碼、包裹 pending、入住批次有效。建立 10 分鐘驗證，包裹仍待領取，碼尚未失效。同包裹只有一筆有效驗證；同管理員重試回傳既有結果，另一管理員遇有效驗證回傳 409。過期需重新核對現場狀況再驗證。\n\n同一帳號對此類碼連續失敗5次，暫停對應驗證功能5分鐘，回傳429與Retry-After；不暫停其他功能或其他帳號。邀請碼驗證與確認加入共用失敗計數，取件碼另計。",
+      "tags": [
+        "取件與電子簽收"
+      ]
+    }
+  },
+  "/api/pickup-verifications/{verification_id}": {
+    "get": {
+      "operationId": "get_pickup_verification",
+      "summary": "查詢取件進度",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員、住戶\n\n僅經手管理員或有該包裹資格的住戶能查詢。可供畫面輪詢等待簽收，不回傳取件碼。",
+      "tags": [
+        "取件與電子簽收"
+      ]
+    }
+  },
+  "/api/pickup-verifications/{verification_id}/confirm": {
+    "post": {
+      "operationId": "confirm_pickup",
+      "summary": "住戶確認收到包裹",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 住戶\n\n無需 request body。先檢查當下登入帳號啟用、resident、有效資格及未結束批次，資格批次須與包裹相同。新簽收再檢查驗證 awaiting_confirmation、未過期與包裹 pending。同一交易完成唯一簽收、保存簽收者及經手管理員當時姓名、包裹 picked_up、驗證 completed，使碼失效。簽收者取自登入帳號、時間由系統取得。驗證和簽收的 parcel_id 必須一致。同一簽收者在仍具存取權時重試回傳原成功結果；另一同戶成員回傳 409（已簽收）；已失去資格回傳 403。並行確認只能成功一次。未完成驗證過期回傳 410，須重新確認現場情況後再驗證。\n只由住戶本人確認，管理員不得代簽。現場未確認先留櫃檯；已交付未簽收先記錄異常並聯絡核對，恢復流程後仍由有資格的住戶確認，不能繞過入住或資格限制。",
+      "tags": [
+        "取件與電子簽收"
+      ]
+    }
+  },
+  "/api/pickup-verifications/{verification_id}/cancel": {
+    "post": {
+      "operationId": "cancel_pickup_verification",
+      "summary": "取消本次驗證",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n經手管理員可取消尚未完成的取件驗證；包裹仍待領取。已完成簽收不得取消。",
+      "tags": [
+        "取件與電子簽收"
+      ]
+    }
+  },
+  "/api/parcels/{parcel_id}/exception": {
+    "put": {
+      "operationId": "report_parcel_exception",
+      "summary": "記錄或更新最近一次異常",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n只供所屬大樓管理員操作未領取、未退回包裹。填原因後設 exception，記錄操作者與時間、清空前次處理結果，取消未完成取件驗證。同一交易完成；只保留最近一次，不建立獨立異常資料表。\n已交付但住戶未完成電子簽收時，可在既有異常原因中記錄並追蹤，不代表已完成簽收。",
+      "tags": [
+        "包裹管理"
+      ]
+    }
+  },
+  "/api/parcels/{parcel_id}/exception/resolve": {
+    "post": {
+      "operationId": "resolve_parcel_exception",
+      "summary": "處理最近一次異常",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n只接受 exception 包裹。pending 表示問題處理完成、恢復領取並更新取件碼；returned 表示已實際退回物流。填處理結果並記錄操作者、時間。入住批次已結束者只允許 returned，不能恢復領取。",
+      "tags": [
+        "包裹管理"
+      ]
+    }
+  },
+  "/api/units/{unit_id}/occupancies": {
+    "get": {
+      "operationId": "list_occupancies",
+      "summary": "查看戶別入住批次",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n管理員只可查看負責大樓內的戶別，包含目前與歷史批次。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    },
+    "post": {
+      "operationId": "create_occupancy",
+      "summary": "建立入住批次",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body。系統記錄 started_at、created_at；每戶同時間只能有一個有效批次。檢查與建立須在交易中防止並行重複。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/occupancies/{occupancy_id}/end": {
+    "post": {
+      "operationId": "end_occupancy",
+      "summary": "結束整戶入住",
+      "description": "**開發階段：第 3 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body。管理員先查詢未領包裹，再確認結束入住。同一交易：填 ended_at、撤銷所有未取消資格、停用邀請碼、取消未完成驗證，待領包裹標為 exception 並填搬離原因與操作者時間；既有異常補充搬離原因。已簽收、已退回者不改狀態。舊包裹保留批次歸屬，後續僅允許異常處理與退回，不允許搬離後領取。重試已結束批次不再覆寫紀錄。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/occupancies/{occupancy_id}/invite-codes": {
+    "get": {
+      "operationId": "list_invite_codes",
+      "summary": "查看邀請碼狀態與期限",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n只限負責大樓管理員；不回傳原碼或雜湊，顯示目前及歷史邀請碼的狀態、期限。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    },
+    "post": {
+      "operationId": "create_invite_code",
+      "summary": "產生入住批次邀請碼",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 大樓管理員\n\n無需 request body，不接受管理員自訂期限。系統產生四位數字字串（含開頭0），全系統有效碼唯一；expires_at 固定為 created_at 加24小時。有效入住才能產生；停用舊碼、建立新碼與唯一檢查一起成功或失敗。原碼只在成功回應顯示一次；可提早停用或重發，同戶多人使用，既有成員不受影響。碼空間不足時回傳409且保留原有效碼。",
+      "tags": [
+        "戶別與邀請碼"
+      ]
+    }
+  },
+  "/api/buildings/{building_id}/admins/{user_id}": {
+    "delete": {
+      "operationId": "unassign_building_admin",
+      "summary": "取消管理員分配",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n取消現行分配後立即失去原大樓管理權；保留使用者帳號與過去經手紀錄。更換負責大樓時先取消原分配再指派新大樓。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    }
+  },
+  "/api/building-admins": {
+    "get": {
+      "operationId": "list_admin_directory",
+      "summary": "查看所有大樓管理員",
+      "description": "**開發階段：第 2 階段**\n\n**可使用角色：** 系統管理員\n\n只供系統管理員的管理員管理畫面使用，包含已分配與未分配的building_admin帳號。操作者選姓名與大樓，前端保存並傳送user_id，不要求使用者輸入ID或Email。調任沿用先取消原分配再指派新大樓；第二步失敗需顯示未分配狀態並可重試，不能顯示調任成功。",
+      "tags": [
+        "大樓與管理員"
+      ]
+    }
+  }
+}

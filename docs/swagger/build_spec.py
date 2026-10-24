@@ -22,9 +22,9 @@ def page(n, item): return add(n, {'items': array(ref(item)), 'total': integer(1,
 dt = lambda: string('2026-10-08T10:30:00+08:00', format='date-time')
 nullable_dt = lambda: {**dt(), 'nullable': True, 'example': None}
 roles = ['system_admin', 'building_admin', 'resident']
-name = lambda: string('李佳穎', minLength=1, maxLength=50)
+name = lambda: string('李佳穎', minLength=1, maxLength=100)
 phone = lambda: string('0912345678', minLength=8, maxLength=20)
-email = lambda: string('resident@example.com', format='email')
+email = lambda: string('resident@example.com', format='email', maxLength=255)
 password = lambda: string('DemoPass2026!', minLength=8, maxLength=128, writeOnly=True, format='password')
 unit_label = lambda: string('A 棟 5 樓之 1')
 
@@ -95,6 +95,7 @@ op('/api/buildings','get',1,'list_buildings','取得可管理的大樓','系統�
 op('/api/buildings','post',1,'create_building','建立大樓','建立大樓基本資料。',S,'Building','BuildingCreate',201)
 op('/api/buildings/{building_id}','get',1,'get_building','取得大樓資料','大樓管理員需具有該大樓管理資格。',S+M,'Building')
 op('/api/buildings/{building_id}','patch',1,'update_building','修改大樓資料','檢查角色與大樓範圍。',S+M,'Building','BuildingUpdate')
+op('/api/buildings/{building_id}','delete',1,'delete_building','刪除空白大樓','僅系統管理員可刪除；有管理員分配、戶別或任何業務紀錄回傳 409，不存在回傳 404，不連帶刪除。',S,status=204,extra_errors=[409])
 op('/api/buildings/{building_id}/admins','post',1,'assign_building_admin','建立或指派大樓管理員','可建立新管理員帳號，或指派既有的大樓管理員帳號。重複指派回傳 409。',S,'BuildingAdmin','BuildingAdminAssign',201,extra_errors=[409])
 op('/api/buildings/{building_id}/admins','get',1,'list_building_admins','查看大樓管理員','只供系統管理員查看。',S,'BuildingAdminPage',params=pagination)
 op('/api/buildings/{building_id}/units','get',2,'list_units','查看樓層與戶號','只回傳所屬大樓戶別，不回傳邀請碼。',M,'UnitPage',params=pagination+[query('floor',string('5'))])
@@ -142,6 +143,8 @@ schemas['User']['properties']['role']['example'] = 'resident'
 for key in ('Building', 'BuildingCreate', 'BuildingUpdate'):
     schemas[key]['properties']['phone'] = {**phone(), 'nullable':True}
     schemas[key]['properties']['address']['maxLength'] = 255
+schemas['Building']['properties']['can_delete'] = {'type':'boolean','description':'目前帳號為系統管理員且大樓無管理員分配、戶別及業務紀錄時為 true；刪除時仍須重新檢查。'}
+schemas['Building']['required'].append('can_delete')
 schemas['Building']['properties']['updated_at'] = dt()
 schemas['Building']['required'].append('updated_at')
 for key in ('Unit','UnitCreate','UnitUpdate'):
@@ -248,11 +251,20 @@ paths['/api/parcels/{parcel_id}']['patch']['description'] += '\n任何資料實�
 paths['/api/pickup-verifications/{verification_id}/confirm']['post']['description'] += '\n只由住戶本人確認，管理員不得代簽。現場未確認先留櫃檯；已交付未簽收先記錄異常並聯絡核對，恢復流程後仍由有資格的住戶確認，不能繞過入住或資格限制。'
 paths['/api/parcels/{parcel_id}/exception']['put']['description'] += '\n已交付但住戶未完成電子簽收時，可在既有異常原因中記錄並追蹤，不代表已完成簽收。'
 
+# 2A 已實作的來源驗證與帳號防濫用；與 Q-05 邀請／取件碼限流分開。
+for auth_path in ('/api/auth/register', '/api/auth/login', '/api/auth/logout'):
+    paths[auth_path]['post']['responses']['403'] = {'$ref': '#/components/responses/Error403'}
+    paths[auth_path]['post']['description'] += '\n寫入請求須攜帶允許的 Origin；缺少、null 或不受信任來源回傳 403。'
+paths['/api/auth/login']['post']['description'] += '\n登入依來源 IP 與正規化 Email 分別限制每 5 分鐘 20 次（含成功），超限回傳 429 與 Retry-After。'
+paths['/api/auth/register']['post']['description'] += '\n註冊依來源 IP 與正規化 Email 分別限制每小時 10 次（含成功），超限回傳 429 與 Retry-After。'
+paths['/api/users/me']['patch']['description'] += '\n寫入請求須攜帶允許的 Origin；缺少或不受信任來源回傳 403。'
+paths['/api/users/me']['get']['description'] += '\n2B／2D 已接上實際查詢：memberships 只包含本人尚未結束入住的 active／exit_requested 資格；managed_building_ids 為目前管理分配。空陣列代表當下沒有對應關聯。'
+
 error_names={400:('INVALID_CODE','邀請碼或取件碼無效。'),401:('UNAUTHENTICATED','請先登入，或帳號密碼不正確。'),403:('FORBIDDEN','你沒有權限執行此操作。'),404:('NOT_FOUND','找不到資料。'),409:('CONFLICT','資料重複，或目前狀態不允許此操作。'),410:('VERIFICATION_EXPIRED','取件驗證已過期，請重新驗證。'),422:('VALIDATION_ERROR','輸入資料格式不正確。'),429:('TOO_MANY_REQUESTS','嘗試次數過多，請稍後再試。'),500:('INTERNAL_ERROR','系統暫時無法完成操作。')}
 responses={f'Error{c}':{'description':m,'content':{'application/json':{'schema':ref('Error'),'example':{'code':n,'message':m}}}} for c,(n,m) in error_names.items()}
 responses['Error429']['headers']={'Retry-After':{'description':'距離可重試的剩餘秒數。','schema':{'type':'integer','minimum':0}}}
 
-description='''大樓包裹管理系統 API 設計草案。**這是文件，尚未實作後端。**
+description='''大樓包裹管理系統 API 規格。**40 個後端操作；各項實作與驗收證據見開發計畫；2A 以外的前端及整體串接待完成。依 D-26 先完成 DB／後端；進度以 development-plan.md 為準。**
 
 依 docs/business-rules.md 與 docs/open-questions.md 開發；第一階段確認規則，第二階段基本功能，第三階段主要功能。Q-01～Q-10已確認，見 docs/decisions.md；後續技術方案仍按T清單驗證。
 
@@ -284,7 +296,7 @@ description='''大樓包裹管理系統 API 設計草案。**這是文件，尚�
 ## 補充
 本規格的統一錯誤格式需在 FastAPI 中實作對應例外處理；不是 FastAPI 預設 validation 回應。邀請碼存雜湊，取件碼存加密資料，但皆不回傳保存值。一般顯示資訊可由關聯取得；簽收者與經手管理員姓名須保存簽收當時快照。加密與雜湊的查找、唯一限制與交易實作仍須依資料庫設計文件核對。
 '''
-spec={'openapi':'3.0.3','info':{'title':'寓收｜大樓包裹管理系統 API','version':'0.4.0-draft','description':description},'servers':[{'url':'http://localhost:8001','description':'預計使用的本機 FastAPI（尚未實作）'}],'tags':[{'name':n} for n in tag_names],'security':[{'cookieAuth':[]}],'paths':paths,'components':{'securitySchemes':{'cookieAuth':{'type':'apiKey','in':'cookie','name':'access_token','description':'登入由伺服器設定 HttpOnly Cookie，前端不自行指定簽收者。'}},'schemas':schemas,'responses':responses}}
+spec={'openapi':'3.0.3','info':{'title':'寓收｜大樓包裹管理系統 API','version':'0.4.0-draft','description':description},'servers':[{'url':'http://localhost:8001','description':'本機 FastAPI（40 個業務操作）'}],'tags':[{'name':n} for n in tag_names],'security':[{'cookieAuth':[]}],'paths':paths,'components':{'securitySchemes':{'cookieAuth':{'type':'apiKey','in':'cookie','name':'access_token','description':'登入由伺服器設定 HttpOnly Cookie，前端不自行指定簽收者。'}},'schemas':schemas,'responses':responses}}
 
 # Validate the locally generated contract: every reference, unique operation ID,
 # path parameter declaration and response schema must resolve before delivery.
@@ -318,6 +330,9 @@ for methods in paths.values():
 
 raw=json.dumps(spec,ensure_ascii=False,indent=2)
 (OUT/'openapi.json').write_text(raw,encoding='utf-8')
+# 後端回應驗證使用相同契約；不複製第二套欄位定義。
+(OUT.parent.parent/'backend/app/schemas/contract.json').write_text(json.dumps(schemas,ensure_ascii=False,indent=2),encoding='utf-8')
+(OUT.parent.parent/'backend/app/contract_operations.json').write_text(json.dumps({p:{m:{k:o[k] for k in ('operationId','summary','description','tags')} for m,o in methods.items()} for p,methods in paths.items()},ensure_ascii=False,indent=2),encoding='utf-8')
 def scalar(v): return json.dumps(v,ensure_ascii=False)
 def yaml_lines(v,indent=0):
     pad=' '*indent

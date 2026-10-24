@@ -1,0 +1,1613 @@
+{
+  "Error": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "example": "FORBIDDEN"
+      },
+      "message": {
+        "type": "string",
+        "example": "你沒有權限執行此操作。"
+      },
+      "details": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "example": "email"
+            },
+            "message": {
+              "type": "string",
+              "example": "Email 格式不正確。"
+            }
+          },
+          "required": [
+            "field",
+            "message"
+          ]
+        }
+      }
+    },
+    "required": [
+      "code",
+      "message"
+    ]
+  },
+  "Message": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "example": "操作成功。"
+      }
+    },
+    "required": [
+      "message"
+    ]
+  },
+  "User": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 12
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678"
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255,
+        "example": "resident@example.com"
+      },
+      "role": {
+        "type": "string",
+        "enum": [
+          "system_admin",
+          "building_admin",
+          "resident"
+        ],
+        "example": "resident"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "is_active": {
+        "type": "boolean",
+        "example": true
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "phone",
+      "email",
+      "role",
+      "created_at",
+      "is_active",
+      "updated_at"
+    ]
+  },
+  "RegisterRequest": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678"
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255,
+        "example": "resident@example.com"
+      },
+      "password": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 128,
+        "writeOnly": true,
+        "format": "password",
+        "example": "DemoPass2026!"
+      }
+    },
+    "required": [
+      "name",
+      "phone",
+      "email",
+      "password"
+    ],
+    "additionalProperties": false
+  },
+  "LoginRequest": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255,
+        "example": "resident@example.com"
+      },
+      "password": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 128,
+        "writeOnly": true,
+        "format": "password",
+        "example": "DemoPass2026!"
+      }
+    },
+    "required": [
+      "email",
+      "password"
+    ],
+    "additionalProperties": false
+  },
+  "ProfileUpdate": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678"
+      }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "minProperties": 1
+  },
+  "Building": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "name": {
+        "type": "string",
+        "example": "森光花園",
+        "maxLength": 100
+      },
+      "address": {
+        "type": "string",
+        "example": "台北市中山區森光路 18 號",
+        "maxLength": 255
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678",
+        "nullable": true
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "can_delete": {
+        "type": "boolean",
+        "description": "目前帳號為系統管理員且大樓無管理員分配、戶別及業務紀錄時為 true；刪除時仍須重新檢查。"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "address",
+      "phone",
+      "created_at",
+      "can_delete",
+      "updated_at"
+    ]
+  },
+  "BuildingCreate": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "森光花園"
+      },
+      "address": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255,
+        "example": "台北市中山區森光路 18 號"
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678",
+        "nullable": true
+      }
+    },
+    "required": [
+      "name",
+      "address"
+    ],
+    "additionalProperties": false
+  },
+  "BuildingUpdate": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "森光花園"
+      },
+      "address": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255,
+        "example": "台北市中山區森光路 18 號"
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678",
+        "nullable": true
+      }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "minProperties": 1
+  },
+  "NewBuildingAdmin": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20,
+        "example": "0912345678"
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "maxLength": 255,
+        "example": "resident@example.com"
+      },
+      "password": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 128,
+        "writeOnly": true,
+        "format": "password",
+        "example": "DemoPass2026!"
+      }
+    },
+    "required": [
+      "name",
+      "phone",
+      "email",
+      "password"
+    ],
+    "additionalProperties": false
+  },
+  "ExistingBuildingAdmin": {
+    "type": "object",
+    "properties": {
+      "user_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 8,
+        "description": "必須為既有的大樓管理員帳號。"
+      }
+    },
+    "required": [
+      "user_id"
+    ],
+    "additionalProperties": false
+  },
+  "BuildingAdminAssign": {
+    "oneOf": [
+      {
+        "$ref": "#/components/schemas/NewBuildingAdmin"
+      },
+      {
+        "$ref": "#/components/schemas/ExistingBuildingAdmin"
+      }
+    ],
+    "description": "二選一：提供新帳號資料，或提供既有管理員 user_id。不能同時提供。"
+  },
+  "BuildingAdmin": {
+    "type": "object",
+    "properties": {
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "user": {
+        "$ref": "#/components/schemas/User"
+      },
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 3
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "building_id",
+      "user",
+      "id",
+      "created_at"
+    ]
+  },
+  "Unit": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 501
+      },
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "floor": {
+        "type": "string",
+        "example": "5"
+      },
+      "unit_number": {
+        "type": "string",
+        "example": "A-501",
+        "maxLength": 20
+      },
+      "label": {
+        "type": "string",
+        "example": "A 棟 5 樓之 1"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "id",
+      "building_id",
+      "floor",
+      "unit_number",
+      "label",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "UnitCreate": {
+    "type": "object",
+    "properties": {
+      "floor": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20,
+        "example": "5"
+      },
+      "unit_number": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20,
+        "example": "A-501"
+      }
+    },
+    "required": [
+      "floor",
+      "unit_number"
+    ],
+    "additionalProperties": false
+  },
+  "UnitUpdate": {
+    "type": "object",
+    "properties": {
+      "floor": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20,
+        "example": "5"
+      },
+      "unit_number": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20,
+        "example": "A-501"
+      }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "minProperties": 1
+  },
+  "InviteCode": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 21
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "active",
+          "expired",
+          "inactive"
+        ],
+        "example": "active"
+      },
+      "expires_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "固定為created_at加24小時，由後端產生。",
+        "example": "2026-10-09T10:30:00+08:00"
+      },
+      "disabled_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      },
+      "created_by": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 8
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "id",
+      "occupancy_id",
+      "status",
+      "expires_at",
+      "disabled_at",
+      "created_by",
+      "created_at"
+    ],
+    "description": "不含原始碼或雜湊。status 是由停用時間、到期時間、批次是否結束推導的 API 欄位。"
+  },
+  "InviteInput": {
+    "type": "object",
+    "properties": {
+      "invite_code": {
+        "type": "string",
+        "pattern": "^[0-9]{4}$",
+        "minLength": 4,
+        "maxLength": 4,
+        "description": "四位數字字串，保留開頭的0。",
+        "example": "0382"
+      }
+    },
+    "required": [
+      "invite_code"
+    ],
+    "additionalProperties": false
+  },
+  "InvitationVerified": {
+    "type": "object",
+    "properties": {
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "building_name": {
+        "type": "string",
+        "example": "森光花園"
+      },
+      "unit_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 501
+      },
+      "unit_label": {
+        "type": "string",
+        "example": "A 棟 5 樓之 1"
+      },
+      "expires_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      }
+    },
+    "required": [
+      "building_id",
+      "building_name",
+      "unit_id",
+      "unit_label",
+      "expires_at",
+      "occupancy_id"
+    ]
+  },
+  "Membership": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 45
+      },
+      "user_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 12
+      },
+      "user_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "building_name": {
+        "type": "string",
+        "example": "森光花園"
+      },
+      "unit_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 501
+      },
+      "unit_label": {
+        "type": "string",
+        "example": "A 棟 5 樓之 1"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "active",
+          "exit_requested",
+          "revoked"
+        ],
+        "example": "active"
+      },
+      "joined_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "left_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "exit_requested_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      },
+      "revoked_by": {
+        "type": "integer",
+        "nullable": true,
+        "example": null
+      }
+    },
+    "required": [
+      "id",
+      "user_id",
+      "user_name",
+      "building_id",
+      "building_name",
+      "unit_id",
+      "unit_label",
+      "status",
+      "joined_at",
+      "left_at",
+      "occupancy_id",
+      "exit_requested_at",
+      "revoked_by"
+    ]
+  },
+  "Me": {
+    "type": "object",
+    "properties": {
+      "user": {
+        "$ref": "#/components/schemas/User"
+      },
+      "memberships": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Membership"
+        }
+      },
+      "managed_building_ids": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 1,
+          "example": 1
+        }
+      }
+    },
+    "required": [
+      "user",
+      "memberships",
+      "managed_building_ids"
+    ]
+  },
+  "Parcel": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 125
+      },
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "unit_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 501
+      },
+      "unit_label": {
+        "type": "string",
+        "example": "A 棟 5 樓之 1"
+      },
+      "recipient_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "tracking_number": {
+        "type": "string",
+        "nullable": true,
+        "example": "TC26007128"
+      },
+      "note": {
+        "type": "string",
+        "nullable": true,
+        "example": "外箱完整"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "picked_up",
+          "exception",
+          "returned"
+        ],
+        "example": "pending"
+      },
+      "created_by": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 8
+      },
+      "picked_up_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      },
+      "active_verification_id": {
+        "type": "integer",
+        "minimum": 1,
+        "nullable": true,
+        "example": 81,
+        "description": "有效的本次取件驗證 ID；未驗證、過期或完成後為 null。"
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "courier": {
+        "type": "string",
+        "nullable": true,
+        "example": "黑貓宅急便"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "storage_location": {
+        "type": "string",
+        "nullable": true,
+        "example": "A 架第 2 層"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "exception_reason": {
+        "type": "string",
+        "nullable": true
+      },
+      "exception_reported_by": {
+        "type": "integer",
+        "nullable": true
+      },
+      "exception_reported_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      },
+      "resolution_note": {
+        "type": "string",
+        "nullable": true
+      },
+      "resolved_by": {
+        "type": "integer",
+        "nullable": true
+      },
+      "resolved_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      }
+    },
+    "required": [
+      "id",
+      "building_id",
+      "unit_id",
+      "unit_label",
+      "recipient_name",
+      "tracking_number",
+      "note",
+      "status",
+      "created_by",
+      "picked_up_at",
+      "active_verification_id",
+      "occupancy_id",
+      "courier",
+      "created_at",
+      "storage_location",
+      "updated_at",
+      "exception_reason",
+      "exception_reported_by",
+      "exception_reported_at",
+      "resolution_note",
+      "resolved_by",
+      "resolved_at"
+    ],
+    "description": "大樓、戶別、簽收時間與有效驗證 ID 為關聯／衍生欄位。只保留最近一次異常資料，不回傳取件碼密文。"
+  },
+  "ParcelCreate": {
+    "type": "object",
+    "properties": {
+      "recipient_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "tracking_number": {
+        "type": "string",
+        "maxLength": 100,
+        "nullable": true,
+        "example": "TC26007128"
+      },
+      "note": {
+        "type": "string",
+        "nullable": true,
+        "example": "外箱完整"
+      },
+      "courier": {
+        "type": "string",
+        "maxLength": 100,
+        "nullable": true,
+        "example": "黑貓宅急便"
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "storage_location": {
+        "type": "string",
+        "maxLength": 100,
+        "nullable": true,
+        "example": "A 架第 2 層"
+      },
+      "duplicate_confirmed": {
+        "type": "boolean",
+        "default": false,
+        "description": "管理員看過同棟相同物流與單號的既有紀錄並確認後才送true；不是一般表單預設值，不擴大權限。"
+      }
+    },
+    "required": [
+      "occupancy_id",
+      "recipient_name"
+    ],
+    "additionalProperties": false
+  },
+  "ParcelUpdate": {
+    "type": "object",
+    "properties": {
+      "recipient_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "tracking_number": {
+        "type": "string",
+        "maxLength": 100,
+        "nullable": true,
+        "example": "TC26007128"
+      },
+      "note": {
+        "type": "string",
+        "nullable": true,
+        "example": "外箱完整"
+      },
+      "courier": {
+        "type": "string",
+        "maxLength": 100,
+        "nullable": true,
+        "example": "黑貓宅急便"
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "storage_location": {
+        "type": "string",
+        "maxLength": 100,
+        "nullable": true,
+        "example": "A 架第 2 層"
+      }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "minProperties": 1
+  },
+  "PickupCode": {
+    "type": "object",
+    "properties": {
+      "parcel_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 125
+      },
+      "pickup_code": {
+        "type": "string",
+        "pattern": "^[0-9]{6}$",
+        "description": "須保留字串型別，避免開頭的 0 消失。",
+        "example": "582913"
+      }
+    },
+    "required": [
+      "parcel_id",
+      "pickup_code"
+    ]
+  },
+  "VerificationCreate": {
+    "type": "object",
+    "properties": {
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1,
+        "description": "管理員本次正在操作的大樓。"
+      },
+      "pickup_code": {
+        "type": "string",
+        "pattern": "^[0-9]{6}$",
+        "example": "582913"
+      }
+    },
+    "required": [
+      "building_id",
+      "pickup_code"
+    ],
+    "additionalProperties": false
+  },
+  "PickupVerification": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 81
+      },
+      "parcel_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 125
+      },
+      "unit_label": {
+        "type": "string",
+        "example": "A 棟 5 樓之 1"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "awaiting_confirmation",
+          "completed",
+          "expired",
+          "cancelled"
+        ],
+        "example": "awaiting_confirmation"
+      },
+      "verified_by": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 8
+      },
+      "verified_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "expires_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:40:00+08:00"
+      },
+      "pickup_id": {
+        "type": "integer",
+        "minimum": 1,
+        "nullable": true,
+        "example": null
+      },
+      "courier": {
+        "type": "string",
+        "nullable": true,
+        "example": "黑貓宅急便"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "id",
+      "parcel_id",
+      "unit_label",
+      "courier",
+      "status",
+      "verified_by",
+      "verified_at",
+      "expires_at",
+      "pickup_id",
+      "updated_at"
+    ]
+  },
+  "Pickup": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 33
+      },
+      "parcel_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 125
+      },
+      "verification_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 81
+      },
+      "unit_label": {
+        "type": "string",
+        "example": "A 棟 5 樓之 1"
+      },
+      "tracking_number": {
+        "type": "string",
+        "example": "TC26007128",
+        "nullable": true
+      },
+      "handled_by": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 8
+      },
+      "handled_by_name": {
+        "type": "string",
+        "example": "陳怡安"
+      },
+      "occupancy_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "courier": {
+        "type": "string",
+        "example": "黑貓宅急便",
+        "nullable": true
+      },
+      "picked_up_by": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 12,
+        "description": "由登入身分取得，不接受前端指定。"
+      },
+      "picked_up_by_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "picked_up_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "building_name": {
+        "type": "string",
+        "example": "森光花園"
+      },
+      "floor": {
+        "type": "string",
+        "example": "5"
+      },
+      "recipient_name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      }
+    },
+    "required": [
+      "id",
+      "parcel_id",
+      "verification_id",
+      "unit_label",
+      "courier",
+      "tracking_number",
+      "picked_up_by",
+      "picked_up_by_name",
+      "handled_by",
+      "handled_by_name",
+      "picked_up_at",
+      "occupancy_id",
+      "building_name",
+      "floor",
+      "recipient_name"
+    ],
+    "description": "簽收者與經手管理員姓名取自簽收當時保存的姓名快照，之後改名不影響歷史；帳號 ID 保留。大樓名稱、樓層、戶號、收件人、單號及物流顯示目前關聯資料，不保存當時快照。"
+  },
+  "BuildingPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Building"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "BuildingAdminPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BuildingAdmin"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "UnitPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Unit"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "InviteCodePage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/InviteCode"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "MembershipPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Membership"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "ParcelPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Parcel"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "PickupPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Pickup"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "Occupancy": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 7
+      },
+      "unit_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 501
+      },
+      "started_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      },
+      "ended_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": null,
+        "nullable": true
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2026-10-08T10:30:00+08:00"
+      }
+    },
+    "required": [
+      "id",
+      "unit_id",
+      "started_at",
+      "ended_at",
+      "created_at"
+    ]
+  },
+  "OccupancyPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Occupancy"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "InviteCodeCreated": {
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/InviteCode"
+      },
+      {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "description": "只在成功產生時顯示一次；清單和後續查詢不回傳。",
+            "example": "0382"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      }
+    ]
+  },
+  "ExceptionReport": {
+    "type": "object",
+    "properties": {
+      "exception_reason": {
+        "type": "string",
+        "minLength": 1,
+        "example": "外箱破損，等待處理。"
+      }
+    },
+    "required": [
+      "exception_reason"
+    ],
+    "additionalProperties": false
+  },
+  "ExceptionResolution": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "returned"
+        ],
+        "example": "pending"
+      },
+      "resolution_note": {
+        "type": "string",
+        "minLength": 1,
+        "example": "已實際退回物流。"
+      }
+    },
+    "required": [
+      "status",
+      "resolution_note"
+    ],
+    "additionalProperties": false
+  },
+  "AdminDirectoryEntry": {
+    "type": "object",
+    "properties": {
+      "user_id": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 8
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "example": "李佳穎"
+      },
+      "building_id": {
+        "type": "integer",
+        "minimum": 1,
+        "nullable": true,
+        "example": null
+      },
+      "building_name": {
+        "type": "string",
+        "nullable": true,
+        "example": "森光花園"
+      }
+    },
+    "required": [
+      "user_id",
+      "name",
+      "building_id",
+      "building_name"
+    ]
+  },
+  "AdminDirectoryPage": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AdminDirectoryEntry"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0,
+        "example": 1
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 1
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "example": 20,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "page",
+      "page_size"
+    ]
+  },
+  "DuplicateParcelWarning": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "enum": [
+          "DUPLICATE_PARCEL_CONFIRMATION_REQUIRED"
+        ],
+        "example": "DUPLICATE_PARCEL_CONFIRMATION_REQUIRED"
+      },
+      "message": {
+        "type": "string",
+        "example": "已有相同物流公司與單號，請核對後確認是否新增。"
+      },
+      "existing_parcels": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Parcel"
+        }
+      }
+    },
+    "required": [
+      "code",
+      "message",
+      "existing_parcels"
+    ]
+  }
+}
