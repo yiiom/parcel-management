@@ -51,6 +51,8 @@ export default function ReviewedOperation<T>({
     useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [backgroundChecking, setBackgroundChecking] = useState(false);
+  const visibleBusy = busy && !backgroundChecking;
   const [error, setError] =
     useState<InvitationApiError | null>(null);
   const [message, setMessage] = useState("");
@@ -83,6 +85,7 @@ export default function ReviewedOperation<T>({
 
     lockRef.current = true;
     setBusy(true);
+    setBackgroundChecking(!manual);
     setError(null);
     if (manual) setMessage("");
 
@@ -99,7 +102,10 @@ export default function ReviewedOperation<T>({
       }
     } finally {
       lockRef.current = false;
-      if (aliveRef.current) setBusy(false);
+      if (aliveRef.current) {
+        setBusy(false);
+        setBackgroundChecking(false);
+      }
     }
   }, [load, apply, lockRef]);
 
@@ -255,13 +261,15 @@ export default function ReviewedOperation<T>({
       <button
         type="button"
         className="button"
-        disabled={busy}
+        // 背景核對保留外觀與焦點；refresh 的鎖仍阻止重複操作。
+        disabled={visibleBusy}
+        aria-disabled={busy}
         onClick={() => void refresh()}
       >
-        {busy ? "正在核對…" : "重新查詢目前狀態"}
+        {visibleBusy ? "正在核對…" : "重新查詢目前狀態"}
       </button>
 
-      {!busy && message && (
+      {!visibleBusy && message && (
         <p className="notice" role="status">{message}</p>
       )}
 
@@ -283,7 +291,8 @@ export default function ReviewedOperation<T>({
             <button
               type="button"
               className="button button-primary"
-              disabled={busy}
+              disabled={visibleBusy}
+              aria-disabled={busy}
               onClick={() => void prepare()}
             >
               檢查並預覽：{title}

@@ -563,7 +563,9 @@ function SessionContent({
                         <button
                           type="button"
                           className="button"
-                          disabled={live.checking || busy}
+                          // 背景查詢保留外觀與焦點；copyCode 仍會阻擋查詢中的複製。
+                          disabled={busy}
+                          aria-disabled={live.checking || busy}
                           onClick={() => void copyCode()}
                         >
                           複製取件碼
