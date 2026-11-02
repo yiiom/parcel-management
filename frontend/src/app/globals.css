@@ -793,6 +793,37 @@ input[type="checkbox"] {
   padding: 8px 12px;
 }
 
+/* 取件碼輸入卡片放大：只作用在取件驗證頁的輸入卡片 */
+.pickup-verification-page .narrow-panel {
+  max-width: 760px;   /* 卡片寬度，原本 620px */
+  padding: 28px 32px; /* 卡片內距，原本 12px 16px */
+  gap: 16px;          /* 卡片內各區塊的間距 */
+}
+
+.pickup-verification-page .narrow-panel fieldset {
+  gap: 16px;          /* 標題、輸入框、按鈕之間的間距，原本 8px */
+}
+
+.pickup-verification-page .narrow-panel label {
+  font-size: 18px;    /* 「六位數字取件碼」，原本 14px */
+}
+
+.pickup-verification-page .narrow-panel input {
+  min-height: 64px;   /* 輸入框高度，原本 44px */
+  font-size: 28px;    /* 輸入的數字大小 */
+  text-align: center;
+}
+
+.pickup-verification-page .narrow-panel .button {
+  min-height: 56px;   /* 驗證按鈕高度，原本 44px */
+  font-size: 18px;
+}
+
+.pickup-verification-page .narrow-panel a {
+  font-size: 16px;    /* 「返回包裹管理」「查詢簽收紀錄」 */
+}
+
+
 /* 異常處理頁保留全部資料與單欄，壓縮摘要、明細及操作區留白。 */
 .parcel-exception-page,
 .parcel-exception-page .form-stack {
