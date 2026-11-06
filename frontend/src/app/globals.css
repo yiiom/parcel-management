@@ -819,11 +819,6 @@ input[type="checkbox"] {
   font-size: 18px;
 }
 
-.pickup-verification-page .narrow-panel a {
-  font-size: 16px;    /* 「返回包裹管理」「查詢簽收紀錄」 */
-}
-
-
 /* 異常處理頁保留全部資料與單欄，壓縮摘要、明細及操作區留白。 */
 .parcel-exception-page,
 .parcel-exception-page .form-stack {

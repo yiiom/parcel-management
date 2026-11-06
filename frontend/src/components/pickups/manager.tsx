@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useRef,
@@ -95,16 +94,6 @@ export default function ManagerPickup({
 
   return (
     <main className="form-stack pickup-verification-page">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">{building.name}</p>
-          <h1>取件驗證</h1>
-          <p className="muted">
-            驗碼後交付實物，最後由住戶本人確認收到。
-          </p>
-        </div>
-      </div>
-
       {activeId !== null && activeId !== undefined ? (
         <PickupSession
           key={activeId}
@@ -159,9 +148,6 @@ export default function ManagerPickup({
               </button>
             </fieldset>
           </form>
-
-          <Link href="/parcels">返回包裹管理</Link>
-          <Link href="/pickups">查詢簽收紀錄</Link>
         </section>
       )}
     </main>
