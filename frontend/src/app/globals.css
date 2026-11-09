@@ -1258,6 +1258,9 @@ input[type="checkbox"] {
   font-weight: 650;
 }
 .manager-parcels .page-heading { margin-bottom: 6px; }
+.manager-parcels .page-heading > .button:only-child {
+  margin-left: auto;
+}
 .manager-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .page-content .manager-parcels .manager-total {
   display: grid; gap: 6px; text-align: left; padding: 18px;
