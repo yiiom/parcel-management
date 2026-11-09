@@ -254,7 +254,6 @@ function UnitList({ buildingId }: { buildingId: string }) {
 
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <h1 className="text-2xl font-bold">戶別列表</h1>
       <Link
         href="/workspace/building_admin"
         className="mt-4 inline-block text-teal-700 underline"

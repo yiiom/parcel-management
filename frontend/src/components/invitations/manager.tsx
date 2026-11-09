@@ -36,16 +36,6 @@ export default function InvitationManager() {
 
   return (
     <main className="form-stack">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">{building.name}</p>
-          <h1>邀請碼管理</h1>
-          <p className="muted">
-            請先選擇戶別與入住。邀請碼固定 24 小時到期。
-          </p>
-        </div>
-      </div>
-
       {!unit ? (
         <UnitPicker
           buildingId={building.id}

@@ -95,18 +95,6 @@ export default function PickupHistory() {
 
   return (
     <main className="form-stack">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">
-            {manager ? building?.name : membership?.building_name}
-          </p>
-          <h1>簽收紀錄</h1>
-          <p className="muted">
-            依簽收時間由新到舊排列，日期範圍採臺灣日期。
-          </p>
-        </div>
-      </div>
-
       <section className="panel form-stack">
         <form onSubmit={search} className="form-stack">
           <div className="form-grid">
