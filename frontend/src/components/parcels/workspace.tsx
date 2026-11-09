@@ -186,29 +186,8 @@ export default function ParcelWorkspace({
 
   return (
     <main className={manager ? "form-stack manager-parcels" : "form-stack resident-parcels"}>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">
-            {manager ? building?.name : membership?.building_name}
-          </p>
-          <h1>
-            {exceptionMode
-              ? "異常處理"
-              : manager
-                ? "包裹管理"
-                : `${account.user.name}，你好`}
-          </h1>
-
-          <p className="muted">
-            {exceptionMode
-              ? "預設顯示異常處理中的包裹，可切換狀態查詢；只保留最近一次異常及處理結果。"
-              : manager
-                ? "查看所屬大樓目前及歷史入住的包裹。"
-                : `${membership?.building_name}・${membership?.unit_label}／我的包裹`}
-          </p>
-        </div>
-
-        {manager && !exceptionMode && (
+      {manager && !exceptionMode && (
+        <div className="page-heading">
           <button
             type="button"
             className="button button-primary"
@@ -219,8 +198,8 @@ export default function ParcelWorkspace({
           >
             登記包裹
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {notice && <p className="notice" role="status">{notice}</p>}
       {!manager && <ResidentSummary revision={revision} />}
