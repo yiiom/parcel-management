@@ -38,14 +38,6 @@ export default function MemberDirectory({
 
   return (
     <main className="form-stack">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">{building.name}</p>
-          <h1>{exitMode ? "退出處理" : "住戶名單"}</h1>
-          <p className="muted">依戶別及資格狀態查看真實成員紀錄。</p>
-        </div>
-      </div>
-
       <div className="panel">
         <p>目前範圍：{unit?.label ?? "全部戶別"}</p>
 

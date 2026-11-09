@@ -87,7 +87,6 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-md p-8">
-      <h1 className="text-2xl font-bold">個人資料</h1>
       {user && <p className="mt-4"><Link href={roleHome(user.role)} className="text-teal-700 underline">返回首頁</Link></p>}
 
       {errorMessage && (

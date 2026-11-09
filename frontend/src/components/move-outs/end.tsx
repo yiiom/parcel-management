@@ -62,16 +62,6 @@ export default function EndOccupancyWorkspace({
 
   return (
     <main className="form-stack">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">{building.name}</p>
-          <h1>結束整戶入住</h1>
-          <p className="muted">
-            個別成員搬離請使用退出處理；整戶換人時才結束入住。
-          </p>
-        </div>
-      </div>
-
       <Link href="/move-outs">前往個別退出處理</Link>
 
       {unit ? (

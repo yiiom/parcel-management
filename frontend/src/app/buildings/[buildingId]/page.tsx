@@ -179,8 +179,6 @@ function BuildingDetail({ buildingId }: { buildingId: string }) {
   }
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <h1 className="text-2xl font-bold">大樓詳情</h1>
-
       <Link
         href="/buildings"
         className="mt-4 inline-block text-teal-700 underline"
