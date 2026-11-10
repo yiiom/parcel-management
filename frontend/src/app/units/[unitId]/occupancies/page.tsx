@@ -159,10 +159,6 @@ function OccupancyList({ unitId }: { unitId: string }) {
 
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <h1 className="text-2xl font-bold">入住紀錄列表</h1>
-      <Link href="/workspace/building_admin" className="mt-4 inline-block text-teal-700 underline">
-        返回大樓管理員首頁
-      </Link>
 
       {success && <p className="mt-4 text-teal-700" role="status">{success}</p>}
       {/* 建立與刷新分開處理，刷新失敗不代表建立失敗 */}

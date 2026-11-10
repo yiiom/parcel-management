@@ -254,12 +254,6 @@ function UnitList({ buildingId }: { buildingId: string }) {
 
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <Link
-        href="/workspace/building_admin"
-        className="mt-4 inline-block text-teal-700 underline"
-      >
-        返回大樓管理員首頁
-      </Link>
 
       {/* 即使新增後列表刷新失敗，仍保留新增成功的訊息 */}
       {success && <p className="mt-4 text-teal-700" role="status">{success}</p>}

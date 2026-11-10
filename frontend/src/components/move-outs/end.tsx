@@ -62,8 +62,6 @@ export default function EndOccupancyWorkspace({
 
   return (
     <main className="form-stack">
-      <Link href="/move-outs">前往個別退出處理</Link>
-
       {unit ? (
         <OccupancyChoices
           key={`${unit.id}:${revision}`}
