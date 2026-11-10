@@ -3,7 +3,6 @@
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { useAccount } from "@/components/app-frame";
-import { roleHome } from "@/api/navigation";
 import {
   updateMyProfile,
   type CurrentUser,
@@ -87,8 +86,6 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-md p-8">
-      {user && <p className="mt-4"><Link href={roleHome(user.role)} className="text-teal-700 underline">返回首頁</Link></p>}
-
       {errorMessage && (
         <p role="alert" className="mt-4 text-red-600">
           {errorMessage}

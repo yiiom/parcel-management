@@ -37,7 +37,6 @@ export function getManagerGroups(buildingId?: number) {
     { label: "大樓設定", items: [
       ...(buildingId ? [{ label: "我的大樓", href: `/buildings/${buildingId}` }] : []),
       { label: "個人資料", href: "/profile" },
-      { label: "首頁", href: "/workspace/building_admin" },
     ] },
   ];
 }
