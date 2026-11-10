@@ -179,12 +179,14 @@ function BuildingDetail({ buildingId }: { buildingId: string }) {
   }
   return (
     <main className="mx-auto max-w-2xl p-8">
-      <Link
-        href="/buildings"
-        className="mt-4 inline-block text-teal-700 underline"
-      >
-        返回大樓列表
-      </Link>
+      {account.user.role === "system_admin" && (
+        <Link
+          href="/buildings"
+          className="mt-4 inline-block text-teal-700 underline"
+        >
+          返回大樓列表
+        </Link>
+      )}
 
       {loading && (
         <p className="mt-4" role="status">
