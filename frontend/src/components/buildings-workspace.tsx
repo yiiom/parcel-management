@@ -159,12 +159,24 @@ export default function BuildingsPage() {
     }
   }
   return (
-    <main className="form-stack system-buildings">
-      <div className="page-heading">
-        <div><p className="eyebrow">管理平台 / 大樓管理</p><h1>大樓管理</h1>
-          <p className="muted">建立社區，並安排負責的大樓管理員。</p></div>
-        {canCreate && <button type="button" className="button button-primary" disabled={loading || saving}
-          onClick={() => { setError(""); setSuccess(""); setCreating(true); }}>＋ 建立大樓</button>}
+    <main className="form-stack">
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="sr-only">大樓管理</h1>
+        {result && <p>共 {result.total} 棟大樓</p>}
+        {canCreate && (
+          <button
+            type="button"
+            className="button button-primary ml-auto"
+            disabled={loading || saving}
+            onClick={() => {
+              setError("");
+              setSuccess("");
+              setCreating(true);
+            }}
+          >
+            ＋ 建立大樓
+          </button>
+        )}
       </div>
 
       {loading && <p className="mt-4" role="status">正在載入大樓…</p>}
@@ -177,95 +189,100 @@ export default function BuildingsPage() {
 
       {creating && canCreate && (
         <Modal title="建立大樓" onClose={() => { if (!saving) setCreating(false); }}>
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="form-stack"
-        >
-          {error && <p className="notice notice-error" role="alert">{error}</p>}
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="form-stack"
+          >
+            {error && <p className="notice notice-error" role="alert">{error}</p>}
 
-          <fieldset disabled={saving} className="mt-4 space-y-4">
-            <div>
-              <label htmlFor="building-name" className="block">
-                大樓名稱（必填，1～100 個字元）
-              </label>
-              <input
-                id="building-name"
-                name="name"
-                type="text"
-                required
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="mt-2 w-full rounded border p-3"
-              />
-            </div>
+            <fieldset disabled={saving} className="mt-4 space-y-4">
+              <div>
+                <label htmlFor="building-name" className="block">
+                  大樓名稱（必填，1～100 個字元）
+                </label>
+                <input
+                  id="building-name"
+                  name="name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="mt-2 w-full rounded border p-3"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="building-address" className="block">
-                地址（必填，1～255 個字元）
-              </label>
-              <input
-                id="building-address"
-                name="address"
-                type="text"
-                required
-                value={address}
-                onChange={(event) => setAddress(event.target.value)}
-                className="mt-2 w-full rounded border p-3"
-              />
-            </div>
+              <div>
+                <label htmlFor="building-address" className="block">
+                  地址（必填，1～255 個字元）
+                </label>
+                <input
+                  id="building-address"
+                  name="address"
+                  type="text"
+                  required
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  className="mt-2 w-full rounded border p-3"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="building-phone" className="block">
-                聯絡電話（選填，8～20 個字元）
-              </label>
-              <input
-                id="building-phone"
-                name="phone"
-                type="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                className="mt-2 w-full rounded border p-3"
-              />
-            </div>
+              <div>
+                <label htmlFor="building-phone" className="block">
+                  聯絡電話（選填，8～20 個字元）
+                </label>
+                <input
+                  id="building-phone"
+                  name="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  className="mt-2 w-full rounded border p-3"
+                />
+              </div>
 
-            <button
-              type="submit"
-              className="button button-primary"
-            >
-              {saving ? "新增中…" : "新增大樓"}
-            </button>
-          </fieldset>
-        </form>
+              <button
+                type="submit"
+                className="button button-primary"
+              >
+                {saving ? "新增中…" : "新增大樓"}
+              </button>
+            </fieldset>
+          </form>
         </Modal>
       )}
       {result && (
-        <div className="mt-6">
-          <p>共 {result.total} 棟大樓</p>
-
+        <div>
           {result.items.length === 0 ? (
             <p className="mt-4">目前尚無大樓。</p>
           ) : (
-            <ul className="building-card-grid">
-              {result.items.map((building) => (
-                <li key={building.id} className="panel building-summary-card">
-                  <h2 className="font-bold">
-                    <Link
-                      href={`/buildings/${building.id}`}
-                      className="building-name"
-                    >
-                      {building.name}
-                    </Link>
-                  </h2>
-                  <p className="mt-2">{building.address}</p>
-                  <p className="mt-2">
-                    聯絡電話：{building.phone ?? "未提供"}
-                  </p>
-                  <Link className="button" href={`/buildings/${building.id}`}>查看大樓</Link>
-                  {canCreate && <Link href="/building-admins">前往管理員管理與指派 →</Link>}
-                </li>
-              ))}
-            </ul>
+            <div className="manager-table-scroll">
+              <table className="manager-parcel-table">
+                <caption className="sr-only">大樓列表</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">大樓名稱</th>
+                    <th scope="col">地址</th>
+                    <th scope="col">聯絡電話</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.items.map((building) => (
+                    <tr key={building.id}>
+                      <td>{building.name}</td>
+                      <td>{building.address}</td>
+                      <td>{building.phone ?? "未提供"}</td>
+                      <td>
+                        <Link href={`/buildings/${building.id}`}>
+                          查看大樓
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <nav aria-label="大樓列表分頁" className="mt-6 flex flex-wrap items-center gap-4">
             <button
