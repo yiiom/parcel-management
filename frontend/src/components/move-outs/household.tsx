@@ -58,14 +58,7 @@ export default function HouseholdWorkspace() {
 
   return (
     <main className="form-stack">
-      <div className="page-heading">
-        <div>
-          <h1>我的戶別與退出申請</h1>
-          <p className="muted">
-            申請退出後仍保有權限，直到管理員確認取消資格。
-          </p>
-        </div>
-      </div>
+      <h1 className="sr-only">我的戶別</h1>
 
       <Query load={load}>
         {(initial) => (
@@ -81,6 +74,7 @@ export default function HouseholdWorkspace() {
             onData={syncScope}
             pollMs={3000}
             pollWhile={hasMembership}
+            inlineRefresh
             preview={(data) => (
               <div className="notice">
                 <p>
@@ -93,25 +87,23 @@ export default function HouseholdWorkspace() {
               </div>
             )}
           >
-            {(data) => (
+            {(data, refreshControl) => (
               data.member ? (
                 <section className="panel form-stack">
-                  <h2>
-                    {data.member.building_name}・
-                    {data.member.unit_label}
-                  </h2>
-
-                  <Badge
-                    tone={
-                      data.member.status === "exit_requested"
-                        ? "amber"
-                        : "green"
-                    }
-                  >
-                    {data.member.status === "exit_requested"
-                      ? "等待管理員確認退出"
-                      : "有效入住資格"}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h2 className="min-w-0 wrap-anywhere">
+                        {data.member.building_name}・
+                        {data.member.unit_label}
+                      </h2>
+                      <Badge tone={data.member.status === "exit_requested" ? "amber" : "green"}>
+                        {data.member.status === "exit_requested"
+                          ? "等待管理員確認退出"
+                          : "有效入住資格"}
+                      </Badge>
+                    </div>
+                    {refreshControl}
+                  </div>
 
                   <dl className="detail-grid">
                     <dt>住戶</dt>
@@ -131,20 +123,18 @@ export default function HouseholdWorkspace() {
                       ? "申請已存在，不需重複送出；目前仍可查看包裹與確認簽收。"
                       : "如已準備搬離，可提出退出申請。"}
                   </p>
-
-                  <div className="actions">
-                    <Link href="/parcels">我的包裹</Link>
-                    <Link href="/pickups">簽收紀錄</Link>
-                  </div>
                 </section>
               ) : (
-                <PageState
-                  kind="empty"
-                  title="目前沒有有效入住資格"
-                >
-                  <p>資格取消後不能查看原入住的包裹與簽收紀錄。</p>
-                  <Link href="/join">使用新的有效邀請碼加入戶別</Link>
-                </PageState>
+                <>
+                  {refreshControl}
+                  <PageState
+                    kind="empty"
+                    title="目前沒有有效入住資格"
+                  >
+                    <p>資格取消後不能查看原入住的包裹與簽收紀錄。</p>
+                    <Link href="/join">使用新的有效邀請碼加入戶別</Link>
+                  </PageState>
+                </>
               )
             )}
           </ReviewedOperation>

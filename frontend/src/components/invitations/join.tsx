@@ -146,23 +146,21 @@ export default function JoinInvitation() {
   return (
     <main>
       {!membership && <ResidentSteps current={3} />}
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">住戶</p>
+      <section className="panel narrow-panel form-stack">
+        <header>
           <h1>加入戶別</h1>
           <p className="muted">請向大樓管理員或入住代表取得邀請碼。</p>
-        </div>
-      </div>
+        </header>
 
-      <section className="panel narrow-panel form-stack">
         {membership && (
-          <p className="notice">
-            你目前屬於 {membership.building_name}・{membership.unit_label}。
-            {membership.status === "exit_requested"
-              ? "等待退出期間仍占用資格。"
-              : ""}
-            重複加入同一入住不會新增資格；加入其他戶別會被拒絕。
-          </p>
+          <div className="notice">
+            <p>目前戶別　{membership.building_name}・{membership.unit_label}</p>
+            <p>
+              {membership.status === "exit_requested"
+                ? "管理員確認退出後，才能加入其他戶別。"
+                : "如需加入其他戶別，請先處理目前的入住。"}
+            </p>
+          </div>
         )}
 
         {error && <RequestError error={error} />}
@@ -177,7 +175,7 @@ export default function JoinInvitation() {
           <form onSubmit={verify}>
             <fieldset disabled={busy || remaining > 0} className="form-stack">
               <label>
-                四位數字邀請碼
+                四位數邀請碼
                 <input
                   name="invite_code"
                   type="text"
@@ -197,7 +195,7 @@ export default function JoinInvitation() {
               </label>
 
               <p id="invite-code-help" className="muted">
-                保留開頭的 0。驗證成功後，還需要確認加入。
+                請輸入完整四位數，包含開頭的 0。驗證後須確認加入。
               </p>
 
               <button type="submit" className="button button-primary">

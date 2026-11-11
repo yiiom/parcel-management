@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   useCallback,
+  useEffect,
   useState,
   type SubmitEvent,
 } from "react";
@@ -24,14 +25,19 @@ import { getResidentExceptions } from "./resident-exceptions";
 
 const dashboardStatuses: ParcelStatus[] = ["pending", "picked_up", "exception"];
 
-function ResidentSummary({ revision }: { revision: number }) {
-  const load = useCallback(() => getParcels({ status: "pending" }, 1), []);
-  return <Query key={revision} load={load}>{(result) => (
-    <section className="resident-parcel-banner" aria-label="待領包裹摘要">
-      <h2>目前有 {result.total} 件包裹</h2>
-      <p>到管理室提供取件碼，收到實物後再確認簽收。</p>
-    </section>
-  )}</Query>;
+function ResidentPendingCount() {
+  const [total, setTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void getParcels({ status: "pending" }, 1).then(
+      (result) => { if (active) setTotal(result.total); },
+      () => { if (active) setTotal(null); },
+    );
+    return () => { active = false; };
+  }, []);
+
+  return total === null ? null : <span className="badge resident-pending-count">{total}</span>;
 }
 
 function ManagerTotals({ revision, onSelect }: { revision: number; onSelect: (status: ParcelStatus) => void }) {
@@ -202,7 +208,6 @@ export default function ParcelWorkspace({
       )}
 
       {notice && <p className="notice" role="status">{notice}</p>}
-      {!manager && <ResidentSummary revision={revision} />}
       {!manager && membership?.status === "exit_requested" && <p className="notice">退出申請處理期間，仍保有目前入住的使用權限。</p>}
 
       {manager && !exceptionMode && <ManagerTotals revision={revision} onSelect={(next) => {
@@ -210,11 +215,12 @@ export default function ParcelWorkspace({
         setFilters({ status: next }); setPage(1); setNotice("");
       }} />}
 
-      <section className="panel form-stack parcel-filter-panel">
+      <section className={manager ? "panel form-stack parcel-filter-panel" : "form-stack parcel-filter-panel"}>
         <div className="parcel-status-tabs" aria-label="包裹狀態篩選">
           {(["", "pending", "picked_up", "exception", "returned"] as const).filter((value) => manager || value === "pending" || value === "exception").map((value) => (
             <button type="button" key={value} aria-pressed={(filters.status ?? "") === value} onClick={() => selectStatus(value)}>
               {!manager && value === "exception" ? "異常／退貨" : value ? parcelStatusNames[value] : "全部"}
+              {!manager && value === "pending" && <ResidentPendingCount key={revision} />}
             </button>
           ))}
         </div>
@@ -249,7 +255,7 @@ export default function ParcelWorkspace({
 
           <div className="actions">
             <button type="submit" className="button button-primary">
-              套用搜尋與狀態
+              {manager ? "套用搜尋與狀態" : "搜尋"}
             </button>
 
             <button
@@ -269,7 +275,7 @@ export default function ParcelWorkspace({
                 setNotice("");
               }}
             >
-              清除篩選
+              {manager ? "清除篩選" : "清除"}
             </button>
 
             <button
@@ -277,6 +283,7 @@ export default function ParcelWorkspace({
               className="button"
               onClick={() => setRevision((value) => value + 1)}
             >
+              {!manager && <span aria-hidden="true">↻</span>}
               更新列表
             </button>
           </div>
@@ -320,7 +327,7 @@ export default function ParcelWorkspace({
       <Query key={queryKey} load={load}>
         {(result) => (
           <section className="form-stack" aria-label="包裹列表">
-            <p className="muted">依登記時間由新到舊排列。</p>
+            {manager && <p className="muted">依登記時間由新到舊排列。</p>}
 
             {result.items.length === 0 && (
               <PageState
@@ -346,14 +353,15 @@ export default function ParcelWorkspace({
             <div className={manager ? "manager-mobile-parcels form-stack" : "resident-parcel-cards"}>
             {result.items.map((parcel) => (
               <article key={parcel.id} className="panel">
-                {manager ? <ParcelSummary parcel={parcel} /> : <>
-                  <div className="row-between"><h2>{parcel.courier || "未填物流公司"}</h2><ParcelBadge status={parcel.status} /></div>
-                  <p>{parcel.recipient_name} · {parcel.unit_label}</p>
-                  <p className="muted">物流單號 {parcel.tracking_number || "未填寫"}</p>
+                {manager ? <ParcelSummary parcel={parcel} /> : <div className="resident-parcel-info">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2>{parcel.recipient_name}</h2>
+                    <ParcelBadge status={parcel.status} />
+                  </div>
+                  <p>{parcel.courier || "未填物流公司"} · {parcel.tracking_number || "未填單號"}</p>
                   <p className="muted">登記時間 {formatTime(parcel.created_at)}</p>
-                  <small className="muted">包裹 #{parcel.id}</small>
                   {parcel.status === "pending" && parcel.active_verification_id !== null && <p className="muted">等待住戶確認</p>}
-                </>}
+                </div>}
                 <div className="actions">
                   <button
                     type="button"
@@ -367,12 +375,14 @@ export default function ParcelWorkspace({
             ))}
             </div>
 
-            <Pagination
+            {!manager && page === 1 && result.total <= result.page_size ? (
+              <p className="muted">共 {result.total} 筆</p>
+            ) : <Pagination
               page={page}
               total={result.total}
               pageSize={result.page_size}
               onChange={setPage}
-            />
+            />}
           </section>
         )}
       </Query>
