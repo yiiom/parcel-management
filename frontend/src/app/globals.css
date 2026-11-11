@@ -322,24 +322,6 @@ input[type="checkbox"] {
   flex-shrink: 0;
 }
 
-.system-buildings .page-heading { margin-bottom: 16px; }
-.building-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  list-style: none;
-  padding: 0;
-  margin-top: 16px;
-}
-.building-summary-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.building-summary-card p { color: var(--muted); overflow-wrap: anywhere; }
-.building-summary-card .building-name { color: var(--foreground); text-decoration: none; }
-.building-summary-card > .button { margin-top: auto; }
-.building-summary-card > a:last-child:not(.button) { font-size: 14px; }
-@media (max-width: 700px) {
-  .building-card-grid { grid-template-columns: minmax(0, 1fr); }
-}
-
 .main-navigation a[aria-current="page"] {
   color: var(--brand);
   background: var(--soft);
@@ -1304,7 +1286,7 @@ input[type="checkbox"] {
   .page-content .manager-parcels .manager-total { padding: 12px 8px; }
   .manager-total strong { font-size: 24px; }
   .manager-total small { display: block; }
-  .manager-table-scroll { display: none; }
+  .manager-parcels .manager-table-scroll { display: none; }
   .manager-mobile-parcels { display: grid; }
   .manager-mobile-parcels .panel { padding: 16px; }
   .manager-subnav { margin-bottom: 12px; }
