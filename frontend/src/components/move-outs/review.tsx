@@ -24,7 +24,8 @@ type Props<T> = {
   lockRef: RefObject<boolean>;
   title: string;
   acknowledgement: string;
-  children: (data: T) => ReactNode;
+  children: (data: T, refreshControl: ReactNode) => ReactNode;
+  inlineRefresh?: boolean;
   preview: (data: T) => ReactNode;
   onData?: (data: T) => void;
   pollMs?: number;
@@ -41,6 +42,7 @@ export default function ReviewedOperation<T>({
   title,
   acknowledgement,
   children,
+  inlineRefresh = false,
   preview,
   onData,
   pollMs = 0,
@@ -256,18 +258,23 @@ export default function ReviewedOperation<T>({
     }
   }
 
+  const refreshControl = (
+    <button
+      type="button"
+      className={inlineRefresh ? "button ml-auto shrink-0 text-sm" : "button"}
+      // 背景核對保留外觀與焦點；refresh 的鎖仍阻止重複操作。
+      disabled={visibleBusy}
+      aria-disabled={busy}
+      onClick={() => void refresh()}
+    >
+      {inlineRefresh && <span aria-hidden="true">↻</span>}
+      {visibleBusy ? "正在核對…" : inlineRefresh ? "重新查詢" : "重新查詢目前狀態"}
+    </button>
+  );
+
   return (
     <section className="form-stack" aria-busy={busy}>
-      <button
-        type="button"
-        className="button"
-        // 背景核對保留外觀與焦點；refresh 的鎖仍阻止重複操作。
-        disabled={visibleBusy}
-        aria-disabled={busy}
-        onClick={() => void refresh()}
-      >
-        {visibleBusy ? "正在核對…" : "重新查詢目前狀態"}
-      </button>
+      {(!inlineRefresh || data === null) && refreshControl}
 
       {!visibleBusy && message && (
         <p className="notice" role="status">{message}</p>
@@ -285,7 +292,7 @@ export default function ReviewedOperation<T>({
         )
       ) : (
         <>
-          {children(data)}
+          {children(data, inlineRefresh ? refreshControl : null)}
 
           {!done(data) && !reviewed && (
             <button
