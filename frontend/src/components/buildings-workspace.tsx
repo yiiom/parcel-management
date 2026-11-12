@@ -257,7 +257,7 @@ export default function BuildingsPage() {
             <p className="mt-4">目前尚無大樓。</p>
           ) : (
             <div className="manager-table-scroll">
-              <table className="manager-parcel-table">
+              <table className="manager-parcel-table buildings-table">
                 <caption className="sr-only">大樓列表</caption>
                 <thead>
                   <tr>
