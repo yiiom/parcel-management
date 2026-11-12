@@ -147,11 +147,6 @@ export default function JoinInvitation() {
     <main>
       {!membership && <ResidentSteps current={3} />}
       <section className="panel narrow-panel form-stack">
-        <header>
-          <h1>加入戶別</h1>
-          <p className="muted">請向大樓管理員或入住代表取得邀請碼。</p>
-        </header>
-
         {membership && (
           <div className="notice">
             <p>目前戶別　{membership.building_name}・{membership.unit_label}</p>
@@ -171,7 +166,7 @@ export default function JoinInvitation() {
           </p>
         )}
 
-        {!preview ? (
+        {membership ? null : !preview ? (
           <form onSubmit={verify}>
             <fieldset disabled={busy || remaining > 0} className="form-stack">
               <label>
@@ -179,6 +174,7 @@ export default function JoinInvitation() {
                 <input
                   name="invite_code"
                   type="text"
+                  placeholder="輸入 4 位數字"
                   inputMode="numeric"
                   autoComplete="off"
                   pattern="[0-9]{4}"
@@ -195,7 +191,7 @@ export default function JoinInvitation() {
               </label>
 
               <p id="invite-code-help" className="muted">
-                請輸入完整四位數，包含開頭的 0。驗證後須確認加入。
+                請向大樓管理員或入住代表索取邀請碼。
               </p>
 
               <button type="submit" className="button button-primary">
