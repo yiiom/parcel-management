@@ -1408,6 +1408,10 @@ input[type="checkbox"] {
 .pickup-history-headings th:nth-child(3) { width: 18%; }
 .pickup-history-headings th:last-child { width: 176px; border-top-right-radius: 13px; }
 .pickup-history-headings th:first-child { width: 16%; border-top-left-radius: 13px; }
+.pickup-history-table-unit .pickup-history-headings th:nth-child(1) { width: 15%; }
+.pickup-history-table-unit .pickup-history-headings th:nth-child(2) { width: 12%; }
+.pickup-history-table-unit .pickup-history-headings th:nth-child(3) { width: 24%; }
+.pickup-history-table-unit .pickup-history-headings th:nth-child(4) { width: 14%; }
 
 .pickup-history-headings th:last-child,
 .pickup-history-record td:last-child {
