@@ -81,9 +81,6 @@ export default function HouseholdWorkspace() {
                   將申請退出 {data.member?.building_name}・
                   {data.member?.unit_label}。
                 </p>
-                <p>
-                  這不是立即搬離，也不會取消其他同戶成員資格。
-                </p>
               </div>
             )}
           >

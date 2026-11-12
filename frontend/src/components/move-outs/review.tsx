@@ -261,14 +261,15 @@ export default function ReviewedOperation<T>({
   const refreshControl = (
     <button
       type="button"
-      className={inlineRefresh ? "button ml-auto shrink-0 text-sm" : "button"}
+      className={inlineRefresh ? "button ml-auto w-11 shrink-0 px-0! text-[22px]!" : "button"}
       // 背景核對保留外觀與焦點；refresh 的鎖仍阻止重複操作。
       disabled={visibleBusy}
       aria-disabled={busy}
+      aria-label={inlineRefresh ? (visibleBusy ? "正在核對" : "重新查詢") : undefined}
+      title={inlineRefresh ? "重新查詢" : undefined}
       onClick={() => void refresh()}
     >
-      {inlineRefresh && <span aria-hidden="true">↻</span>}
-      {visibleBusy ? "正在核對…" : inlineRefresh ? "重新查詢" : "重新查詢目前狀態"}
+      {inlineRefresh ? <span aria-hidden="true">↻</span> : (visibleBusy ? "正在核對…" : "重新查詢目前狀態")}
     </button>
   );
 

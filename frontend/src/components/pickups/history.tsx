@@ -21,6 +21,7 @@ import {
 } from "@/components/invitations/shared";
 import { Modal, PageState, Pagination } from "@/components/ui/common";
 import ReceiptFields from "./record";
+import styles from "./history.module.css";
 
 export default function PickupHistory() {
   const { account, building } = useAccount();
@@ -94,10 +95,10 @@ export default function PickupHistory() {
   }
 
   return (
-    <main className="form-stack">
+    <main className={manager ? "form-stack" : `form-stack ${styles.residentHistory}`}>
       <section className="panel form-stack">
-        <form onSubmit={search} className="form-stack">
-          <div className="form-grid">
+        <form onSubmit={search} className={manager ? "form-stack" : styles.filters}>
+          <div className={manager ? "form-grid" : styles.dates}>
             <label>
               起始日期
               <input
@@ -117,13 +118,13 @@ export default function PickupHistory() {
             </label>
           </div>
 
-          {formError && (
+          {manager && formError && (
             <p className="error-text" role="alert">{formError}</p>
           )}
 
-          <div className="actions">
+          <div className={manager ? "actions" : styles.filterActions}>
             <button type="submit" className="button button-primary">
-              套用日期範圍
+              {manager ? "套用日期範圍" : "套用日期"}
             </button>
 
             <button
@@ -138,17 +139,22 @@ export default function PickupHistory() {
                 setFormError("");
               }}
             >
-              清除篩選
+              {manager ? "清除篩選" : "清除"}
             </button>
 
             <button
               type="button"
-              className="button"
+              className={manager ? "button" : `button ${styles.refreshButton}`}
+              aria-label={manager ? undefined : "更新紀錄"}
+              title={manager ? undefined : "更新紀錄"}
               onClick={() => setRevision((value) => value + 1)}
             >
-              更新紀錄
+              {manager ? "更新紀錄" : <span aria-hidden="true">↻</span>}
             </button>
           </div>
+          {!manager && formError && (
+            <p className={`error-text ${styles.filterError}`} role="alert">{formError}</p>
+          )}
         </form>
 
         {manager && building && (
@@ -196,7 +202,39 @@ export default function PickupHistory() {
               />
             )}
 
-            {result.items.map((receipt) => (
+            {!manager && result.items.length > 0 && (
+              <table className={styles.records} role="table" aria-label="簽收紀錄">
+                <thead className={styles.headings} role="rowgroup">
+                  <tr role="row">
+                    <th scope="col" role="columnheader">收件人</th>
+                    <th scope="col" role="columnheader">物流／單號</th>
+                    <th scope="col" role="columnheader">簽收者</th>
+                    <th scope="col" role="columnheader">簽收時間</th>
+                    <th scope="col" role="columnheader">操作</th>
+                  </tr>
+                </thead>
+                <tbody role="rowgroup">
+                  {result.items.map((receipt) => (
+                    <tr key={receipt.id} className={styles.record} role="row">
+                      <th scope="row" role="rowheader">{receipt.recipient_name}</th>
+                      <td role="cell">{receipt.courier || "未填物流公司"}・{receipt.tracking_number || "未填單號"}</td>
+                      <td role="cell"><span className={styles.fieldLabel} aria-hidden="true">簽收者：</span>{receipt.picked_up_by_name}</td>
+                      <td role="cell">
+                        <span className={styles.fieldLabel} aria-hidden="true">簽收時間：</span>
+                        <time dateTime={receipt.picked_up_at}>{formatTime(receipt.picked_up_at)}</time>
+                      </td>
+                      <td role="cell">
+                        <button type="button" className="button" onClick={() => setSelected(receipt)}>
+                          查看詳情
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {manager && result.items.map((receipt) => (
               <article key={receipt.id} className="panel">
                 <h2>{receipt.recipient_name}</h2>
                 <p>
@@ -220,12 +258,16 @@ export default function PickupHistory() {
               </article>
             ))}
 
-            <Pagination
-              page={page}
-              total={result.total}
-              pageSize={result.page_size}
-              onChange={setPage}
-            />
+            {!manager && page === 1 && result.total <= result.page_size ? (
+              <p className="muted">共 {result.total} 筆</p>
+            ) : (
+              <Pagination
+                page={page}
+                total={result.total}
+                pageSize={result.page_size}
+                onChange={setPage}
+              />
+            )}
           </section>
         )}
       </Query>
@@ -266,15 +308,7 @@ function ReceiptModal({
   return (
     <Modal title="簽收詳情" onClose={onClose}>
       <Query load={load}>
-        {(latest) => (
-          <>
-            <ReceiptFields receipt={latest} />
-            <p className="muted">
-              姓名顯示簽收當時保存的值。
-              簽收紀錄不提供修改或刪除。
-            </p>
-          </>
-        )}
+        {(latest) => <ReceiptFields receipt={latest} />}
       </Query>
     </Modal>
   );
