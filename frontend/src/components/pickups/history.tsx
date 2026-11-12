@@ -21,7 +21,6 @@ import {
 } from "@/components/invitations/shared";
 import { Modal, PageState, Pagination } from "@/components/ui/common";
 import ReceiptFields from "./record";
-import styles from "./history.module.css";
 
 export default function PickupHistory() {
   const { account, building } = useAccount();
@@ -69,16 +68,19 @@ export default function PickupHistory() {
 
   function search(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    applyDates(dateFrom, dateTo);
+  }
 
-    if (dateFrom && dateTo && dateFrom > dateTo) {
+  function applyDates(from: string, to: string) {
+    if (from && to && from > to) {
       setFormError("起始日期不可晚於結束日期。");
       return;
     }
 
     setFormError("");
     setFilters({
-      date_from: dateFrom || undefined,
-      date_to: dateTo || undefined,
+      date_from: from || undefined,
+      date_to: to || undefined,
       unit_id: manager ? unit?.id : undefined,
     });
     setPage(1);
@@ -95,16 +97,20 @@ export default function PickupHistory() {
   }
 
   return (
-    <main className={manager ? "form-stack" : `form-stack ${styles.residentHistory}`}>
+    <main className={manager ? "form-stack" : "form-stack resident-pickup-history"}>
       <section className="panel form-stack">
-        <form onSubmit={search} className={manager ? "form-stack" : styles.filters}>
-          <div className={manager ? "form-grid" : styles.dates}>
+        <form onSubmit={search} className={manager ? "form-stack" : "pickup-history-filters"}>
+          <div className={manager ? "form-grid" : "pickup-history-dates"}>
             <label>
               起始日期
               <input
                 type="date"
                 value={dateFrom}
-                onChange={(event) => setDateFrom(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDateFrom(value);
+                  if (!manager) applyDates(value, dateTo);
+                }}
               />
             </label>
 
@@ -113,7 +119,11 @@ export default function PickupHistory() {
               <input
                 type="date"
                 value={dateTo}
-                onChange={(event) => setDateTo(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDateTo(value);
+                  if (!manager) applyDates(dateFrom, value);
+                }}
               />
             </label>
           </div>
@@ -122,10 +132,12 @@ export default function PickupHistory() {
             <p className="error-text" role="alert">{formError}</p>
           )}
 
-          <div className={manager ? "actions" : styles.filterActions}>
-            <button type="submit" className="button button-primary">
-              {manager ? "套用日期範圍" : "套用日期"}
-            </button>
+          <div className={manager ? "actions" : "pickup-history-filter-actions"}>
+            {manager && (
+              <button type="submit" className="button button-primary">
+                套用日期範圍
+              </button>
+            )}
 
             <button
               type="button"
@@ -144,7 +156,7 @@ export default function PickupHistory() {
 
             <button
               type="button"
-              className={manager ? "button" : `button ${styles.refreshButton}`}
+              className={manager ? "button" : "button pickup-history-refresh"}
               aria-label={manager ? undefined : "更新紀錄"}
               title={manager ? undefined : "更新紀錄"}
               onClick={() => setRevision((value) => value + 1)}
@@ -153,7 +165,7 @@ export default function PickupHistory() {
             </button>
           </div>
           {!manager && formError && (
-            <p className={`error-text ${styles.filterError}`} role="alert">{formError}</p>
+            <p className="error-text pickup-history-filter-error" role="alert">{formError}</p>
           )}
         </form>
 
@@ -203,8 +215,8 @@ export default function PickupHistory() {
             )}
 
             {!manager && result.items.length > 0 && (
-              <table className={styles.records} role="table" aria-label="簽收紀錄">
-                <thead className={styles.headings} role="rowgroup">
+              <table className="pickup-history-table" role="table" aria-label="簽收紀錄">
+                <thead className="pickup-history-headings" role="rowgroup">
                   <tr role="row">
                     <th scope="col" role="columnheader">收件人</th>
                     <th scope="col" role="columnheader">物流／單號</th>
@@ -215,12 +227,12 @@ export default function PickupHistory() {
                 </thead>
                 <tbody role="rowgroup">
                   {result.items.map((receipt) => (
-                    <tr key={receipt.id} className={styles.record} role="row">
+                    <tr key={receipt.id} className="pickup-history-record" role="row">
                       <th scope="row" role="rowheader">{receipt.recipient_name}</th>
                       <td role="cell">{receipt.courier || "未填物流公司"}・{receipt.tracking_number || "未填單號"}</td>
-                      <td role="cell"><span className={styles.fieldLabel} aria-hidden="true">簽收者：</span>{receipt.picked_up_by_name}</td>
+                      <td role="cell"><span className="pickup-history-field-label" aria-hidden="true">簽收者：</span>{receipt.picked_up_by_name}</td>
                       <td role="cell">
-                        <span className={styles.fieldLabel} aria-hidden="true">簽收時間：</span>
+                        <span className="pickup-history-field-label" aria-hidden="true">簽收時間：</span>
                         <time dateTime={receipt.picked_up_at}>{formatTime(receipt.picked_up_at)}</time>
                       </td>
                       <td role="cell">
