@@ -313,7 +313,7 @@ function ProtectedFrame({
             ))}
           </nav>
 
-          <div className={role === "system_admin" ? "account-box system-account-box" : "account-box"}>
+          <div className={role === "system_admin" ? "account-box system-account-box" : role === "resident" ? "account-box resident-account-box" : "account-box"}>
             <span className="avatar" aria-hidden="true">
               {Array.from(account.user.name)[0]}
             </span>
@@ -328,7 +328,7 @@ function ProtectedFrame({
                 </Link>
               )}
               <button
-                className={role === "system_admin" ? "button" : "button button-quiet"}
+                className={role === "building_admin" ? "button button-quiet" : "button"}
                 type="button"
                 disabled={loggingOut}
                 onClick={logout}

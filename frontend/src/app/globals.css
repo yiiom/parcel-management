@@ -364,6 +364,34 @@ input[type="checkbox"] {
   display: contents;
 }
 
+.account-box.resident-account-box {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  margin-inline: -8px;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.resident-account-box > div {
+  min-width: 0;
+}
+
+.resident-account-box strong {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resident-account-box .button {
+  padding-inline: 8px;
+  border-color: #7893a7;
+  white-space: nowrap;
+}
+
 .system-account-box {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
