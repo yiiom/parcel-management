@@ -12,6 +12,7 @@ import {
   type AdminDirectoryPage, // 後端回傳的管理員分頁資料型別
 } from "@/api/building-admins";
 import { getBuildings, type Building } from "@/api/buildings"; // 取得選單需要的大樓資料
+import { Modal } from "@/components/ui/common";
 
 export default function BuildingAdminsPage() {
   const router = useRouter(); // 取得頁面導覽工具
@@ -28,9 +29,8 @@ export default function BuildingAdminsPage() {
   const [password, setPassword] = useState(""); // 登入密碼
   const [confirmPassword, setConfirmPassword] = useState(""); // 確認密碼，只在前端比對
   const [saving, setSaving] = useState(false); // 控制建立期間的按鈕與欄位
-  // 只展開一位管理員的確認區塊；null 表示沒有等待確認的操作
-  const [pendingUnassignUserId, setPendingUnassignUserId] =
-    useState<number | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [assignmentAdminId, setAssignmentAdminId] = useState<number | null>(null);
   // 記錄正在取消分配的帳號 ID；null 代表目前沒有取消操作
   const [unassigningUserId, setUnassigningUserId] =
     useState<number | null>(null);
@@ -44,6 +44,7 @@ export default function BuildingAdminsPage() {
   const busy = saving || unassigningUserId !== null || assigningUserId !== null;
   const [success, setSuccess] = useState(""); // 建立成功的提示
   const [page, setPage] = useState(1); // 目前查詢的頁碼，預設第一頁
+  const assignmentAdmin = result?.items.find((admin) => admin.user_id === assignmentAdminId);
   // 沒有資料時仍顯示共 1 頁
   const totalPages = result
     ? Math.max(1, Math.ceil(result.total / result.page_size))
@@ -137,7 +138,7 @@ export default function BuildingAdminsPage() {
     // 不允許超出頁數，也不重複查詢目前頁面
     if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
 
-    setPendingUnassignUserId(null); // 切頁後清除尚未確認的操作
+    setAssignmentAdminId(null);
     setLoading(true); // 立即顯示載入提示
     setResult(null); // 清除舊名單，避免新頁碼搭配舊資料
     setError("");
@@ -190,6 +191,7 @@ export default function BuildingAdminsPage() {
         return next;
       });
       setSuccess(`已將「${admin.name}」分配至「${selectedBuilding.name}」。`);
+      setAssignmentAdminId(null);
       // 分配成功與刷新列表分開處理，避免誤報分配失敗
       try {
         const latest = await getBuildingAdmins(page);
@@ -220,15 +222,14 @@ export default function BuildingAdminsPage() {
     if (admin.building_id === null) return;
 
     // 只有正在確認的管理員，才允許送出取消請求
-    if (pendingUnassignUserId !== admin.user_id) return;
+    if (assignmentAdminId !== admin.user_id) return;
     // 以目前列表再次核對，避免操作已過時的分配資料
     const currentAdmin = result.items.find((item) => item.user_id === admin.user_id);
     if (!currentAdmin || currentAdmin.building_id === null ||
         currentAdmin.building_id !== admin.building_id) {
-      setPendingUnassignUserId(null);
+      setAssignmentAdminId(null);
       return;
     }
-    setPendingUnassignUserId(null); // 收起確認區塊，再執行原有 API 流程
 
     setUnassigningUserId(admin.user_id); // 顯示該筆的「取消中…」
     setError(""); // 清除前一次錯誤
@@ -263,6 +264,7 @@ export default function BuildingAdminsPage() {
             },
       );
       setSuccess(`已取消「${admin.name}」的大樓分配。`);
+      setAssignmentAdminId(null);
 
       // 再讀取目前頁，與後端最新資料同步
       // 另開一層 try，避免刷新失敗被誤報為取消失敗
@@ -375,6 +377,7 @@ export default function BuildingAdminsPage() {
       setPassword("");
       setConfirmPassword("");
       setSuccess("管理員已建立並分配大樓。");
+      setCreating(false);
 
       // 新管理員排在第一頁；從其他頁新增時，由 useEffect 載入第一頁
       if (page !== 1) {
@@ -415,18 +418,42 @@ export default function BuildingAdminsPage() {
     }
   }
 
-  return (
-    <main className="mx-auto max-w-2xl p-8">
-      {/* 頁面標題 */}
-      <h1 className="text-2xl font-bold">大樓管理員列表</h1>
+  function closeCreate() {
+    if (busy) return;
+    setCreating(false);
+    setError("");
+    setBuildingId("");
+    setName("");
+    setEmail("");
+    setPhone("");
+    setPassword("");
+    setConfirmPassword("");
+  }
 
-      {/* 點擊後返回系統管理員首頁 */}
-      <Link
-        href="/workspace/system_admin"
-        className="mt-4 inline-block text-teal-700 underline"
-      >
-        返回系統管理員首頁
-      </Link>
+  function closeAssignment() {
+    if (busy) return;
+    setAssignmentAdminId(null);
+    setError("");
+  }
+
+  return (
+    <main className="form-stack">
+      <h1 className="sr-only">大樓管理員列表</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        {result && <p>共 {result.total} 位大樓管理員</p>}
+        <button
+          type="button"
+          className="button button-primary ml-auto"
+          disabled={loading || busy || !result || buildings.length === 0}
+          onClick={() => {
+            setError("");
+            setSuccess("");
+            setCreating(true);
+          }}
+        >
+          ＋ 建立大樓管理員
+        </button>
+      </div>
 
       {/* loading 為 true 時才顯示；role="status" 協助輔助工具讀出狀態 */}
       {loading && (
@@ -436,7 +463,7 @@ export default function BuildingAdminsPage() {
       )}
 
       {/* error 有內容時才顯示；role="alert" 提醒輔助工具這是錯誤訊息 */}
-      {error && (
+      {error && !creating && !assignmentAdmin && (
         <p className="mt-4 text-red-600" role="alert">
           {error}
         </p>
@@ -461,17 +488,14 @@ export default function BuildingAdminsPage() {
       )}
 
       {/* 資料載入完成、管理員列表查詢成功且有可選大樓，才顯示表單 */}
-      {!loading && result && buildings.length > 0 && (
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="mt-6 rounded border p-4"
-        >
-          <h2 className="text-xl font-bold">建立大樓管理員</h2>
+      {creating && (
+        <Modal title="建立大樓管理員" onClose={closeCreate}>
+          <form onSubmit={handleSubmit} noValidate className="form-stack">
+            {error && <p className="notice notice-error" role="alert">{error}</p>}
 
           {/* 送出期間停用整組欄位與按鈕，避免重複操作 */}
-          <fieldset disabled={busy} className="mt-4 space-y-4">
-            <div>
+          <fieldset disabled={busy} className="form-grid">
+            <div className="col-span-full">
               <label htmlFor="admin-building" className="block">
                 分配大樓（必選）
               </label>
@@ -510,21 +534,6 @@ export default function BuildingAdminsPage() {
             </div>
 
             <div>
-              <label htmlFor="admin-email" className="block">
-                Email（必填，使用尚未註冊的地址）
-              </label>
-              <input
-                id="admin-email"
-                name="email"
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="mt-2 w-full rounded border p-3"
-              />
-            </div>
-
-            <div>
               <label htmlFor="admin-phone" className="block">
                 聯絡電話（必填，8～20 個字元）
               </label>
@@ -535,6 +544,21 @@ export default function BuildingAdminsPage() {
                 required
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
+                className="mt-2 w-full rounded border p-3"
+              />
+            </div>
+
+            <div className="col-span-full">
+              <label htmlFor="admin-email" className="block">
+                Email（必填，使用尚未註冊的地址）
+              </label>
+              <input
+                id="admin-email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 className="mt-2 w-full rounded border p-3"
               />
             </div>
@@ -576,140 +600,127 @@ export default function BuildingAdminsPage() {
             </div>
 
             {/* 送出表單會執行剛才加入的 handleSubmit */}
-            <button
-              type="submit"
-              className="w-full rounded bg-teal-700 p-3 text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? "建立中…" : "建立管理員並分配大樓"}
-            </button>
+            <div className="col-span-full flex flex-wrap justify-end gap-2">
+              <button type="button" className="button" onClick={closeCreate}>取消</button>
+              <button type="submit" className="button button-primary">
+                {saving ? "建立中…" : "建立管理員"}
+              </button>
+            </div>
           </fieldset>
-        </form>
+          </form>
+        </Modal>
+      )}
+
+      {assignmentAdmin && (
+        <Modal
+          title={assignmentAdmin.building_id === null ? "分配大樓" : "調整分配"}
+          onClose={closeAssignment}
+        >
+          <div className="form-stack">
+            {error && <p className="notice notice-error" role="alert">{error}</p>}
+            {assignmentAdmin.building_id === null ? (
+              <label>
+                分配大樓給「{assignmentAdmin.name}」
+                <select
+                  value={assignmentSelections[assignmentAdmin.user_id] ?? ""}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setAssignmentSelections((current) => ({ ...current, [assignmentAdmin.user_id]: value }));
+                  }}
+                  disabled={busy}
+                >
+                  <option value="">請選擇大樓</option>
+                  {buildings.map((building) => (
+                    <option key={building.id} value={building.id}>
+                      {building.name}｜{building.address}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <div className="space-y-2">
+                <p>確定取消「{assignmentAdmin.name}」對「{assignmentAdmin.building_name ?? "此大樓"}」的管理分配嗎？</p>
+                <p className="muted">取消後會立即失去該大樓的管理權，帳號與歷史紀錄仍會保留。</p>
+              </div>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              <button type="button" className="button" onClick={closeAssignment} disabled={busy}>
+                取消
+              </button>
+              {assignmentAdmin.building_id === null ? (
+                <button
+                  type="button"
+                  className="button button-primary"
+                  disabled={busy || !assignmentSelections[assignmentAdmin.user_id]}
+                  onClick={() => handleAssign(assignmentAdmin)}
+                >
+                  {busy ? "分配中…" : "分配大樓"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="button button-danger"
+                  disabled={busy}
+                  onClick={() => handleUnassign(assignmentAdmin)}
+                >
+                  {busy ? "取消中…" : "確認取消分配"}
+                </button>
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* 成功取得資料後，才顯示總數與列表 */}
       {result && (
-        <div className="mt-6">
-          {/* total 是符合查詢條件的總人數，不只是這一頁的人數 */}
-          <p>共 {result.total} 位大樓管理員</p>
+        <div>
 
           {/* 這一頁沒有資料時顯示空資料提示，否則顯示名單 */}
           {result.items.length === 0 ? (
             <p className="mt-4">目前尚無大樓管理員。</p>
           ) : (
-            <ul className="mt-4 space-y-4">
-              {/* 將每筆管理員資料轉成一張列表卡片 */}
-              {result.items.map((admin) => (
-                <li
-                  key={admin.user_id}
-                  className="rounded border p-4"
-                >
-                  {/* key 使用唯一帳號 ID，讓 React 辨識各筆列表項目 */}
-                  <h2 className="break-words font-bold">
-                    {admin.name}
-                  </h2>
-
-                  <p className="mt-2">
-                    負責大樓：
-                    {/* 沒有分配時顯示文字；已分配則顯示大樓詳情連結 */}
-                    {admin.building_id === null ? (
-                      "尚未分配"
-                    ) : (
-                      <Link
-                        href={`/buildings/${admin.building_id}`}
-                        className="text-teal-700 underline"
-                      >
-                        {admin.building_name}
-                      </Link>
-                    )}
-                  </p>
-                  {/* 未分配者才顯示大樓選單；已分配者沿用取消分配按鈕 */}
-                  {admin.building_id === null && (
-                    <div className="mt-3 space-y-3">
-                      <label htmlFor={`assign-building-${admin.user_id}`} className="block">
-                        分配大樓給「{admin.name}」
-                      </label>
-                      <select
-                        // 每張卡片使用不同 ID，讓標籤正確對應自己的選單
-                        id={`assign-building-${admin.user_id}`}
-                        value={assignmentSelections[admin.user_id] ?? ""}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          // 只更新目前這張卡片的選項
-                          setAssignmentSelections((current) => ({ ...current, [admin.user_id]: value }));
-                        }}
-                        disabled={loading || busy || buildings.length === 0}
-                        className="w-full rounded border p-3 disabled:opacity-50"
-                      >
-                        <option value="">請選擇大樓</option>
-                        {/* 顯示名稱與地址方便辨識，實際傳給後端的是大樓 ID */}
-                        {buildings.map((building) => (
-                          <option key={building.id} value={building.id}>
-                            {building.name}｜{building.address}
-                          </option>
-                        ))}
-                      </select>
-                      {buildings.length === 0 && (
-                        <p className="text-sm">目前沒有可選大樓，請先建立大樓。</p>
-                      )}
-                      <button
-                        type="button" // 不送出上方的建立管理員表單
-                        onClick={() => handleAssign(admin)}
-                        disabled={loading || busy || buildings.length === 0}
-                        aria-label={`分配大樓給 ${admin.name}`}
-                        className="rounded bg-teal-700 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {assigningUserId === admin.user_id ? "分配中…" : "分配大樓"}
-                      </button>
-                    </div>
-                  )}
-                  {/* 只有已分配大樓的管理員，才顯示取消按鈕 */}
-                  {admin.building_id !== null && (
-                    pendingUnassignUserId === admin.user_id ? (
-                      <section
-                        aria-labelledby={`unassign-title-${admin.user_id}`}
-                        className="mt-3 space-y-3 rounded border border-red-600 p-4"
-                      >
-                        <h3 id={`unassign-title-${admin.user_id}`} className="font-semibold">
-                          確認取消分配
-                        </h3>
-                        <p>確定取消「{admin.name}」對「{admin.building_name ?? "此大樓"}」的管理分配嗎？</p>
-                        <p>取消後會立即失去該大樓的管理權，帳號與歷史紀錄仍會保留。</p>
-                        <div className="flex flex-wrap gap-3">
-                          <button
-                            type="button"
-                            // 只收起確認區塊，不送出 API 或刷新列表
-                            onClick={() => setPendingUnassignUserId(null)}
-                            disabled={loading || busy}
-                            className="rounded border px-4 py-2 disabled:opacity-50"
-                          >
-                            取消
-                          </button>
-                          <button
-                            type="button"
-                            // 明確確認後才送出取消分配請求
-                            onClick={() => handleUnassign(admin)}
-                            disabled={loading || busy}
-                            className="rounded bg-red-700 px-4 py-2 text-white disabled:opacity-50"
-                          >
-                            確認取消分配
-                          </button>
-                        </div>
-                      </section>
-                    ) : (
-                    <button
-                      type="button" // 不觸發建立管理員表單
-                      onClick={() => setPendingUnassignUserId(admin.user_id)} // 只展開確認區塊
-                      disabled={loading || busy} // 任何資料操作進行中都停用
-                      aria-label={`取消 ${admin.name} 的大樓分配`}
-                      className="mt-3 rounded border border-red-600 px-4 py-2 text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {unassigningUserId === admin.user_id ? "取消中…" : "取消分配"}
-                    </button>
-                    )
-                  )}
-                </li>
-              ))}
-            </ul>
+            <div className="manager-table-scroll">
+              <table className="manager-parcel-table">
+                <caption className="sr-only">大樓管理員列表</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">姓名</th>
+                    <th scope="col">分配大樓</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.items.map((admin) => (
+                    <tr key={admin.user_id}>
+                      <td>{admin.name}</td>
+                      <td>
+                        {admin.building_id === null ? (
+                          <span className="muted">尚未分配</span>
+                        ) : (
+                          <Link href={`/buildings/${admin.building_id}`} className="underline">
+                            {admin.building_name}
+                          </Link>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="button whitespace-nowrap"
+                          disabled={loading || busy || (admin.building_id === null && buildings.length === 0)}
+                          onClick={() => {
+                            setError("");
+                            setSuccess("");
+                            setAssignmentAdminId(admin.user_id);
+                          }}
+                        >
+                          {admin.building_id === null ? "分配大樓" : "調整分配"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           {/* 分頁按鈕不送出建立表單；載入期間舊名單與分頁列暫時隱藏 */}
           <nav aria-label="管理員列表分頁" className="mt-6 flex flex-wrap items-center gap-4">

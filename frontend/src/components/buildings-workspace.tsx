@@ -274,7 +274,11 @@ export default function BuildingsPage() {
                       <td>{building.address}</td>
                       <td>{building.phone ?? "未提供"}</td>
                       <td>
-                        <Link href={`/buildings/${building.id}`}>
+                        <Link
+                          className="button whitespace-nowrap"
+                          href={`/buildings/${building.id}`}
+                          aria-label={`查看大樓：${building.name}`}
+                        >
                           查看大樓
                         </Link>
                       </td>
