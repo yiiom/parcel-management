@@ -337,7 +337,7 @@ export default function ParcelWorkspace({
             )}
 
             {manager && result.items.length > 0 && <div className="manager-table-scroll">
-              <table className="manager-parcel-table">
+              <table className="manager-parcel-table parcels-table">
                 <caption className="sr-only">包裹列表，依登記時間由新到舊排列</caption>
                 <thead><tr><th scope="col">收件人／戶別</th><th scope="col">物流／單號</th><th scope="col">登記時間</th><th scope="col">狀態</th><th scope="col">操作</th></tr></thead>
                 <tbody>{result.items.map((parcel) => <tr key={parcel.id}>
