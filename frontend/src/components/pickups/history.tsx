@@ -97,10 +97,10 @@ export default function PickupHistory() {
   }
 
   return (
-    <main className={manager ? "form-stack" : "form-stack resident-pickup-history"}>
+    <main className="form-stack resident-pickup-history">
       <section className="panel form-stack">
-        <form onSubmit={search} className={manager ? "form-stack" : "pickup-history-filters"}>
-          <div className={manager ? "form-grid" : "pickup-history-dates"}>
+        <form onSubmit={search} className="pickup-history-filters">
+          <div className="pickup-history-dates">
             <label>
               起始日期
               <input
@@ -109,7 +109,7 @@ export default function PickupHistory() {
                 onChange={(event) => {
                   const value = event.target.value;
                   setDateFrom(value);
-                  if (!manager) applyDates(value, dateTo);
+                  applyDates(value, dateTo);
                 }}
               />
             </label>
@@ -122,23 +122,13 @@ export default function PickupHistory() {
                 onChange={(event) => {
                   const value = event.target.value;
                   setDateTo(value);
-                  if (!manager) applyDates(dateFrom, value);
+                  applyDates(dateFrom, value);
                 }}
               />
             </label>
           </div>
 
-          {manager && formError && (
-            <p className="error-text" role="alert">{formError}</p>
-          )}
-
-          <div className={manager ? "actions" : "pickup-history-filter-actions"}>
-            {manager && (
-              <button type="submit" className="button button-primary">
-                套用日期範圍
-              </button>
-            )}
-
+          <div className="pickup-history-filter-actions">
             <button
               type="button"
               className="button"
@@ -151,20 +141,20 @@ export default function PickupHistory() {
                 setFormError("");
               }}
             >
-              {manager ? "清除篩選" : "清除"}
+              清除
             </button>
 
             <button
               type="button"
-              className={manager ? "button" : "button pickup-history-refresh"}
-              aria-label={manager ? undefined : "更新紀錄"}
-              title={manager ? undefined : "更新紀錄"}
+              className="button pickup-history-refresh"
+              aria-label="更新紀錄"
+              title="更新紀錄"
               onClick={() => setRevision((value) => value + 1)}
             >
-              {manager ? "更新紀錄" : <span aria-hidden="true">↻</span>}
+              <span aria-hidden="true">↻</span>
             </button>
           </div>
-          {!manager && formError && (
+          {formError && (
             <p className="error-text pickup-history-filter-error" role="alert">{formError}</p>
           )}
         </form>
@@ -214,11 +204,16 @@ export default function PickupHistory() {
               />
             )}
 
-            {!manager && result.items.length > 0 && (
-              <table className="pickup-history-table" role="table" aria-label="簽收紀錄">
+            {result.items.length > 0 && (
+              <table
+                className={manager ? "pickup-history-table pickup-history-table-unit" : "pickup-history-table"}
+                role="table"
+                aria-label="簽收紀錄"
+              >
                 <thead className="pickup-history-headings" role="rowgroup">
                   <tr role="row">
                     <th scope="col" role="columnheader">收件人</th>
+                    {manager && <th scope="col" role="columnheader">戶別</th>}
                     <th scope="col" role="columnheader">物流／單號</th>
                     <th scope="col" role="columnheader">簽收者</th>
                     <th scope="col" role="columnheader">簽收時間</th>
@@ -229,6 +224,12 @@ export default function PickupHistory() {
                   {result.items.map((receipt) => (
                     <tr key={receipt.id} className="pickup-history-record" role="row">
                       <th scope="row" role="rowheader">{receipt.recipient_name}</th>
+                      {manager && (
+                        <td role="cell">
+                          <span className="pickup-history-field-label" aria-hidden="true">戶別：</span>
+                          {receipt.unit_label}
+                        </td>
+                      )}
                       <td role="cell">{receipt.courier || "未填物流公司"}・{receipt.tracking_number || "未填單號"}</td>
                       <td role="cell"><span className="pickup-history-field-label" aria-hidden="true">簽收者：</span>{receipt.picked_up_by_name}</td>
                       <td role="cell">
@@ -246,31 +247,7 @@ export default function PickupHistory() {
               </table>
             )}
 
-            {manager && result.items.map((receipt) => (
-              <article key={receipt.id} className="panel">
-                <h2>{receipt.recipient_name}</h2>
-                <p>
-                  {receipt.building_name}・{receipt.unit_label}
-                </p>
-                <p>
-                  {receipt.courier || "未填物流公司"}・
-                  {receipt.tracking_number || "未填單號"}
-                </p>
-                <p>簽收者：{receipt.picked_up_by_name}</p>
-                <p>經手管理員：{receipt.handled_by_name}</p>
-                <p>{formatTime(receipt.picked_up_at)}</p>
-
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => setSelected(receipt)}
-                >
-                  查看簽收詳情
-                </button>
-              </article>
-            ))}
-
-            {!manager && page === 1 && result.total <= result.page_size ? (
+            {page === 1 && result.total <= result.page_size ? (
               <p className="muted">共 {result.total} 筆</p>
             ) : (
               <Pagination
