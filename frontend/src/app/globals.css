@@ -360,6 +360,26 @@ input[type="checkbox"] {
   font-size: 12px;
 }
 
+.account-actions {
+  display: contents;
+}
+
+.system-account-box {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.system-account-box > div {
+  min-width: 0;
+}
+
+.system-account-box .account-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .avatar {
   display: grid;
   place-items: center;

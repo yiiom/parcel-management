@@ -1,0 +1,35 @@
+button.deleteTrigger {
+  border-color: #a94346;
+  color: #a94346;
+}
+
+button.deleteTrigger:hover:not(:disabled) {
+  background: #fff4f4;
+}
+
+.deleteConfirmation input {
+  flex-shrink: 0;
+}
+
+.deleteConfirmation span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+button.deleteButton {
+  background: #a94346;
+  border-color: #a94346;
+  color: white;
+}
+
+button.deleteButton:hover:not(:disabled) {
+  background: #8f3539;
+  border-color: #8f3539;
+}
+
+button.deleteButton:disabled {
+  background: #e5e8ec;
+  border-color: #e5e8ec;
+  color: #52606d;
+  opacity: 1;
+}

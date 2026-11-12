@@ -313,23 +313,29 @@ function ProtectedFrame({
             ))}
           </nav>
 
-          <div className="account-box">
+          <div className={role === "system_admin" ? "account-box system-account-box" : "account-box"}>
             <span className="avatar" aria-hidden="true">
               {Array.from(account.user.name)[0]}
             </span>
             <div>
               <strong>{account.user.name}</strong>
               <small>{roleNames[role]}</small>
-              {role === "system_admin" && <Link href="/profile" aria-current={pathname === "/profile" ? "page" : undefined}>個人資料</Link>}
             </div>
-            <button
-              className="button button-quiet"
-              type="button"
-              disabled={loggingOut}
-              onClick={logout}
-            >
-              {loggingOut ? "登出中…" : "登出"}
-            </button>
+            <div className="account-actions">
+              {role === "system_admin" && (
+                <Link className="button" href="/profile" aria-current={pathname === "/profile" ? "page" : undefined}>
+                  個人資料
+                </Link>
+              )}
+              <button
+                className={role === "system_admin" ? "button" : "button button-quiet"}
+                type="button"
+                disabled={loggingOut}
+                onClick={logout}
+              >
+                {loggingOut ? "登出中…" : "登出"}
+              </button>
+            </div>
           </div>
         </aside>
 
