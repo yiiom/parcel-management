@@ -680,7 +680,7 @@ export default function BuildingAdminsPage() {
             <p className="mt-4">目前尚無大樓管理員。</p>
           ) : (
             <div className="manager-table-scroll">
-              <table className="manager-parcel-table">
+              <table className="manager-parcel-table admins-table">
                 <caption className="sr-only">大樓管理員列表</caption>
                 <thead>
                   <tr>
