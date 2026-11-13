@@ -1692,6 +1692,13 @@ input[type="checkbox"] {
   color: var(--muted);
 }
 
+/* 讓「註冊住戶帳號」一看就知道可以點：加粗、加底線 */
+.landing .landing-register-hint a {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 /* 全站 .public-content a 會把連結改成品牌色，按鈕文字要在這裡改回白色 */
 .landing .landing-button-primary {
   color: #fff;
@@ -1719,6 +1726,28 @@ input[type="checkbox"] {
   border-radius: 56px;
   background: #1b232a;
   box-shadow: 0 0 0 2px #3a464f, 0 30px 60px -20px rgba(36, 55, 70, 0.35);
+  /* 示意畫面的字大小固定，不讓手機瀏覽器依系統字級放大，否則內容會超出手機畫面 */
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* 大手機的佔位框：用 transform 縮小時，由它保留縮小後的版面大小 */
+.landing-phone-slot {
+  --landing-phone-scale: 1;
+  position: relative;
+  flex: none;
+  width: calc(310px * var(--landing-phone-scale));
+  height: calc(640px * var(--landing-phone-scale));
+  margin-inline: auto;
+}
+
+.landing-phone-slot > .landing-phone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  transform: scale(var(--landing-phone-scale));
+  transform-origin: top left;
 }
 
 .landing-phone::before,
@@ -1959,11 +1988,12 @@ input[type="checkbox"] {
 
 .landing-s-code {
   color: var(--brand);
-  font-size: 38px;
+  font-size: 34px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 8px;
-  padding-left: 8px;
+  letter-spacing: 6px;
+  padding-left: 6px;
+  white-space: nowrap;
   text-align: center;
 }
 
@@ -2244,6 +2274,7 @@ input[type="checkbox"] {
   flex: 0 0 100%;
   min-width: 0;
   padding: 64px 14px 34px;
+  overflow: hidden;
   scroll-snap-align: start;
 }
 
@@ -2321,14 +2352,14 @@ input[type="checkbox"] {
 }
 
 @media (max-height: 760px) and (min-width: 861px) {
-  .landing-phone-lg {
-    zoom: 0.85;
+  .landing-phone-slot {
+    --landing-phone-scale: 0.85;
   }
 }
 
 @media (max-height: 660px) and (min-width: 861px) {
-  .landing-phone-lg {
-    zoom: 0.7;
+  .landing-phone-slot {
+    --landing-phone-scale: 0.7;
   }
 }
 
@@ -2352,9 +2383,9 @@ input[type="checkbox"] {
     gap: 10px;
   }
 
-  .landing-feat-grid > .landing-phone-lg {
+  .landing-feat-grid > .landing-phone-slot {
+    --landing-phone-scale: 0.6;
     order: -1;
-    zoom: 0.6;
   }
 
   .landing-copy {
