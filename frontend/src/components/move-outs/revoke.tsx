@@ -56,6 +56,9 @@ export default function RevokeMembership({
             write={write}
             lockRef={lockRef}
             title="取消此住戶資格"
+            inlineRefresh
+            successMessage="已取消此住戶的入住資格。"
+            compactConfirmation={{ confirmLabel: "確認取消資格", backLabel: "返回" }}
             acknowledgement="我已核對此住戶確實搬離，並確認取消的是上方這筆資格。"
             preview={(data) => {
               const activeInvites = data.invites.filter(
@@ -63,17 +66,13 @@ export default function RevokeMembership({
               );
 
               return (
-                <div className="form-stack">
-                  <p className="notice notice-warning">
-                    將取消 {data.target.user_name} 的目前資格，
-                    並停用此入住現有邀請碼。
-                    其他成員資格不變，也不會結束整戶入住。
-                  </p>
-
-                  <p>
-                    目前有效邀請碼紀錄：{activeInvites.length} 筆。
-                    原始邀請碼不會顯示。
-                  </p>
+                <section className="notice notice-warning revoke-impact">
+                  <h3>取消後的影響</h3>
+                  <ul>
+                    <li>此住戶將立即失去原入住的查詢與簽收權限。</li>
+                    <li>此入住的現有邀請碼將停用（目前有效 {activeInvites.length} 筆）。</li>
+                    <li>其他成員資格與整戶入住不受影響。</li>
+                  </ul>
 
                   {activeInvites.map((invite) => (
                     <p key={invite.id}>
@@ -83,45 +82,47 @@ export default function RevokeMembership({
                   ))}
 
                   <p>
-                    被取消者立即失去原入住的查詢及簽收權限。
                     其他成員需要邀請新成員時，請另產生新邀請碼。
                   </p>
-                </div>
+                </section>
               );
             }}
           >
-            {(data) => (
-              <section className="panel form-stack">
-                <h2>{data.target.user_name}</h2>
+            {(data, refreshControl) => (
+              <section className="revoke-summary">
+                <div className="revoke-summary-heading">
+                  <div>
+                    <h3>{data.target.user_name}</h3>
+                    <p>{data.target.building_name}・{data.target.unit_label}</p>
+                  </div>
+                  {refreshControl}
+                </div>
                 <p>
-                  {data.target.building_name}・
-                  {data.target.unit_label}
-                </p>
-
-                <dl className="detail-grid">
-                  <dt>資格編號</dt>
-                  <dd>{data.target.id}</dd>
-                  <dt>入住編號</dt>
-                  <dd>{data.target.occupancy_id}</dd>
-                  <dt>目前狀態</dt>
-                  <dd>
                     {data.target.status === "revoked"
                       ? "資格已取消"
                       : data.target.status === "exit_requested"
                         ? "住戶已申請退出"
                         : "有效資格，尚未申請退出"}
-                  </dd>
-                  <dt>退出申請時間</dt>
-                  <dd>{formatTime(data.target.exit_requested_at)}</dd>
-                  <dt>取消時間</dt>
-                  <dd>{formatTime(data.target.left_at)}</dd>
-                  <dt>取消管理員</dt>
-                  <dd>
-                    {data.target.revoked_by === null
-                      ? "—"
-                      : `帳號 #${data.target.revoked_by}`}
-                  </dd>
-                </dl>
+                </p>
+                <details>
+                  <summary>查看資格明細</summary>
+                  <dl className="detail-grid">
+                    <dt>資格編號</dt>
+                    <dd>{data.target.id}</dd>
+                    <dt>入住編號</dt>
+                    <dd>{data.target.occupancy_id}</dd>
+                    {data.target.exit_requested_at && (
+                      <><dt>退出申請時間</dt><dd>{formatTime(data.target.exit_requested_at)}</dd></>
+                    )}
+                    {data.target.left_at && (
+                      <><dt>取消時間</dt><dd>{formatTime(data.target.left_at)}</dd></>
+                    )}
+                    {data.target.revoked_by !== null && (
+                      <><dt>取消管理員</dt><dd>帳號 #{data.target.revoked_by}</dd></>
+                    )}
+                  </dl>
+                  <Link href="/invitations">前往邀請碼管理</Link>
+                </details>
 
                 {data.target.status === "revoked" && (
                   <PageState
@@ -134,7 +135,6 @@ export default function RevokeMembership({
                   </PageState>
                 )}
 
-                <Link href="/invitations">前往邀請碼管理</Link>
               </section>
             )}
           </ReviewedOperation>

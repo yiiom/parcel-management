@@ -4,6 +4,7 @@ import { useEffect, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createUnit, getUnits, updateUnit, UnitApiError, type Unit, type UnitPage } from "@/api/units";
+import { Modal, PageState, Pagination } from "@/components/ui/common";
 
 export default function UnitListPage() {
   // 從網址讀取大樓 ID
@@ -25,6 +26,7 @@ function UnitList({ buildingId }: { buildingId: string }) {
   const [floor, setFloor] = useState("");
   const [unitNumber, setUnitNumber] = useState("");
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
   // 表單錯誤獨立保存，避免新增失敗時隱藏整個列表
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState("");
@@ -136,6 +138,7 @@ function UnitList({ buildingId }: { buildingId: string }) {
       if (created === null) {
         // 登入失效時清除列表及表單顯示，返回登入頁
         setResult(null);
+        setCreating(false);
         router.replace("/login");
         return;
       }
@@ -143,6 +146,7 @@ function UnitList({ buildingId }: { buildingId: string }) {
       // 只有後端確認新增成功，才清空輸入
       setFloor("");
       setUnitNumber("");
+      setCreating(false);
       setSuccess("戶別已新增。");
       // 清除舊列表並回第一頁，讓 useEffect 重新載入
       setResult(null);
@@ -155,6 +159,7 @@ function UnitList({ buildingId }: { buildingId: string }) {
       if (err instanceof UnitApiError && err.status === 403) {
         // 分配可能已被取消；後端拒絕後不再顯示舊資料
         setResult(null);
+        setCreating(false);
         setError(err.message);
         return;
       }
@@ -172,7 +177,7 @@ function UnitList({ buildingId }: { buildingId: string }) {
   }
 
   function startEdit(unit: Unit) {
-    if (saving || loading || editingId !== null) return;
+    if (saving || loading || creating || editingId !== null) return;
     // 將目前資料複製到編輯表單
     setEditingId(unit.id);
     setEditFloor(unit.floor);
@@ -252,154 +257,151 @@ function UnitList({ buildingId }: { buildingId: string }) {
     }
   }
 
-  return (
-    <main className="mx-auto max-w-2xl p-8">
+  function closeCreate() {
+    if (saving) return;
+    setCreating(false);
+    setFloor("");
+    setUnitNumber("");
+    setFormError("");
+  }
 
-      {/* 即使新增後列表刷新失敗，仍保留新增成功的訊息 */}
-      {success && <p className="mt-4 text-teal-700" role="status">{success}</p>}
-      {/* 新增成功與列表刷新是兩件事，避免誤以為需要再次新增 */}
+  const editingUnit = result?.items.find((unit) => unit.id === editingId);
+
+  return (
+    <main className="member-directory form-stack">
+      {success && <p className="notice" role="status">{success}</p>}
       {success === "戶別已新增。" && error && (
-        <p className="mt-2">
-          戶別已建立，但列表尚未更新。請按「重新載入」，勿重複新增。
-        </p>
+        <p>戶別已建立，但列表尚未更新。請按「重新載入」，勿重複新增。</p>
       )}
-      {loading && <p className="mt-4" role="status">正在載入戶別列表…</p>}
+      {loading && <PageState kind="loading" title="正在載入戶別列表…" />}
 
       {error && (
-        <div className="mt-4">
-          <p className="text-red-600" role="alert">{error}</p>
-          <button
-            type="button"
-            onClick={retryLoad}
-            disabled={loading || saving}
-            className="mt-3 rounded border px-4 py-2 disabled:opacity-50"
-          >
-            重新載入
-          </button>
+        <div className="panel form-stack">
+          <p className="error-text" role="alert">{error}</p>
+          <div className="actions">
+            <button type="button" className="button" onClick={retryLoad} disabled={loading || saving}>
+              重新載入
+            </button>
+          </div>
         </div>
       )}
 
-      {/* 只有成功取得資料時，才顯示總數、列表與分頁 */}
       {!loading && !error && result && (
         <>
-          <form onSubmit={handleCreate} noValidate className="mt-6 rounded border p-4">
-            <h2 className="text-xl font-bold">新增戶別</h2>
-            {formError && <p className="mt-4 text-red-600" role="alert">{formError}</p>}
-            {/* 送出期間停用整份表單，避免修改或重複送出 */}
-            <fieldset disabled={saving || editingId !== null} className="mt-4 space-y-4">
-              <div>
-                <label htmlFor="unit-floor" className="block">樓層（必填，1～20 個字元）</label>
-                <input
-                  id="unit-floor" name="floor" type="text" required
-                  value={floor} onChange={(event) => setFloor(event.target.value)}
-                  placeholder="例如 B1、3F" className="mt-2 w-full rounded border p-3"
-                />
-              </div>
-              <div>
-                <label htmlFor="unit-number" className="block">戶號（必填，1～20 個字元）</label>
-                <input
-                  id="unit-number" name="unit_number" type="text" required
-                  value={unitNumber} onChange={(event) => setUnitNumber(event.target.value)}
-                  placeholder="例如 301、3A" className="mt-2 w-full rounded border p-3"
-                />
-              </div>
-              <button type="submit" className="w-full rounded bg-teal-700 p-3 text-white disabled:cursor-not-allowed disabled:opacity-50">
-                {/* 只有新增送出時才顯示「新增中…」 */}
-                {saving && editingId === null ? "新增中…" : "新增戶別"}
-              </button>
-            </fieldset>
-          </form>
-          <p className="mt-6">共 {result.total} 戶</p>
+          <div className="row-between">
+            <p className="muted">共 {result.total} 戶</p>
+            <button type="button" className="button button-primary" onClick={() => setCreating(true)}>
+              ＋ 新增戶別
+            </button>
+          </div>
+
           {result.items.length === 0 ? (
-            <p className="mt-4">目前沒有戶別資料。</p>
+            <PageState kind="empty" title="目前沒有戶別資料" />
           ) : (
-            <ul className="mt-4 space-y-4">
-              {result.items.map((unit) => (
-                <li key={unit.id} className="rounded border p-4">
-                  {editingId === unit.id ? (
-                    <form onSubmit={handleUpdate} noValidate>
-                      {/* 標題顯示原戶號，方便辨識正在修改哪一筆 */}
-                      <h2 className="font-bold">修改戶別：{unit.unit_number}</h2>
-                      {editError && <p className="mt-3 text-red-600" role="alert">{editError}</p>}
-                      <fieldset disabled={saving} className="mt-4 space-y-4">
-                        <div>
-                          <label htmlFor={`edit-floor-${unit.id}`} className="block">修改樓層（必填，1～20 個字元）</label>
-                          <input
-                            id={`edit-floor-${unit.id}`} name="floor" type="text" required
-                            value={editFloor} onChange={(event) => setEditFloor(event.target.value)}
-                            className="mt-2 w-full rounded border p-3"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor={`edit-number-${unit.id}`} className="block">修改戶號（必填，1～20 個字元）</label>
-                          <input
-                            id={`edit-number-${unit.id}`} name="unit_number" type="text" required
-                            value={editUnitNumber} onChange={(event) => setEditUnitNumber(event.target.value)}
-                            className="mt-2 w-full rounded border p-3"
-                          />
-                        </div>
-                        <div className="flex gap-3">
-                          <button type="submit" className="rounded bg-teal-700 px-4 py-2 text-white disabled:opacity-50">
-                            {saving ? "儲存中…" : "儲存修改"}
-                          </button>
-                          {/* type="button" 避免取消時意外送出表單 */}
-                          <button type="button" onClick={cancelEdit} className="rounded border px-4 py-2 disabled:opacity-50">
-                            取消修改
-                          </button>
-                        </div>
-                      </fieldset>
-                    </form>
-                  ) : (
-                    <>
-                      <h2 className="font-bold">戶號：{unit.unit_number}</h2>
-                      <p className="mt-2">樓層：{unit.floor}</p>
-                      <button
-                        type="button" onClick={() => startEdit(unit)}
-                        disabled={saving || editingId !== null}
-                        aria-label={`修改戶別 ${unit.unit_number}`}
-                        className="mt-3 rounded border px-4 py-2 disabled:opacity-50"
-                      >修改</button>
-                      {/* 從所選戶別開啟入住紀錄；編輯期間先隱藏導覽入口 */}
-                      {!saving && editingId === null && (
+            <table className="member-table unit-table" role="table" aria-label="戶別列表">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">戶號</th>
+                  <th scope="col" role="columnheader">樓層</th>
+                  <th scope="col" role="columnheader">操作</th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                {result.items.map((unit) => (
+                  <tr key={unit.id} role="row">
+                    <th scope="row" role="rowheader">
+                      <span className="member-field-label" aria-hidden="true">戶號：</span>
+                      {unit.unit_number}
+                    </th>
+                    <td role="cell">
+                      <span className="member-field-label" aria-hidden="true">樓層：</span>
+                      {unit.floor}
+                    </td>
+                    <td role="cell">
+                      <div className="actions unit-row-actions">
                         <Link
                           href={`/units/${unit.id}/occupancies`}
                           aria-label={`查看戶別 ${unit.unit_number} 的入住紀錄`}
-                          className="ml-3 inline-block text-teal-700 underline"
+                          className="button"
                         >
                           查看入住紀錄
                         </Link>
-                      )}
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(unit)}
+                          aria-label={`修改戶別 ${unit.unit_number}`}
+                          className="button"
+                        >
+                          修改
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
 
-          <nav
-            aria-label="戶別列表分頁"
-            className="mt-6 flex items-center justify-between gap-4"
-          >
-            <button
-              type="button"
-              onClick={() => changePage(page - 1)}
-              disabled={loading || saving || editingId !== null || page <= 1}
-              className="rounded border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              上一頁
-            </button>
-            <p aria-live="polite">第 {result.page} 頁／共 {totalPages} 頁</p>
-            <button
-              type="button"
-              onClick={() => changePage(page + 1)}
-              disabled={loading || saving || editingId !== null || page >= totalPages}
-              className="rounded border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              下一頁
-            </button>
-          </nav>
+          {totalPages > 1 && (
+            <Pagination page={page} total={result.total} pageSize={result.page_size} onChange={changePage} />
+          )}
         </>
       )}
+
+      {creating && (
+        <Modal title="新增戶別" onClose={closeCreate}>
+          <form onSubmit={handleCreate} noValidate className="form-stack unit-editor">
+            {formError && <p className="error-text" role="alert">{formError}</p>}
+            <fieldset disabled={saving} className="form-stack">
+              <UnitFields floor={floor} unitNumber={unitNumber} onFloorChange={setFloor} onNumberChange={setUnitNumber} />
+              <div className="actions unit-editor-actions">
+                <button type="button" className="button" onClick={closeCreate}>取消</button>
+                <button type="submit" className="button button-primary">{saving ? "新增中…" : "新增戶別"}</button>
+              </div>
+            </fieldset>
+          </form>
+        </Modal>
+      )}
+
+      {editingUnit && (
+        <Modal title={`修改戶別：${editingUnit.unit_number}`} onClose={cancelEdit}>
+          <form onSubmit={handleUpdate} noValidate className="form-stack unit-editor">
+            {editError && <p className="error-text" role="alert">{editError}</p>}
+            <fieldset disabled={saving} className="form-stack">
+              <UnitFields floor={editFloor} unitNumber={editUnitNumber} onFloorChange={setEditFloor} onNumberChange={setEditUnitNumber} />
+              <div className="actions unit-editor-actions">
+                <button type="button" className="button" onClick={cancelEdit}>取消修改</button>
+                <button type="submit" className="button button-primary">{saving ? "儲存中…" : "儲存修改"}</button>
+              </div>
+            </fieldset>
+          </form>
+        </Modal>
+      )}
     </main>
+  );
+}
+
+function UnitFields({
+  floor,
+  unitNumber,
+  onFloorChange,
+  onNumberChange,
+}: {
+  floor: string;
+  unitNumber: string;
+  onFloorChange: (value: string) => void;
+  onNumberChange: (value: string) => void;
+}) {
+  return (
+    <div className="form-grid">
+      <label>
+        樓層（必填，1～20 個字元）
+        <input name="floor" type="text" required value={floor} onChange={(event) => onFloorChange(event.target.value)} placeholder="例如 B1、3F" />
+      </label>
+      <label>
+        戶號（必填，1～20 個字元）
+        <input name="unit_number" type="text" required value={unitNumber} onChange={(event) => onNumberChange(event.target.value)} placeholder="例如 301、3A" />
+      </label>
+    </div>
   );
 }

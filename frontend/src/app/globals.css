@@ -1387,6 +1387,108 @@ input[type="checkbox"] {
   font-size: 22px;
 }
 
+.modal:has(.revoke-summary) {
+  max-width: 620px;
+}
+
+.revoke-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.revoke-summary-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-wrap: anywhere;
+}
+
+.revoke-summary summary {
+  cursor: pointer;
+  color: var(--brand);
+}
+
+.revoke-summary details .detail-grid {
+  margin-block: 12px;
+}
+
+.revoke-impact {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #edcbc8;
+  background: var(--danger-bg);
+  color: #783b37;
+}
+
+.revoke-impact ul {
+  list-style: disc;
+  padding-inline-start: 1.4em;
+}
+
+.revoke-confirmation-actions {
+  justify-content: flex-end;
+}
+
+.end-occupancy-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.end-impact-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.end-impact-list li {
+  display: grid;
+  gap: 4px;
+  padding-block: 10px;
+  border-block-start: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.modal:has(.end-occupancy-summary) .revoke-confirmation-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding-block: 10px;
+  border-block-start: 1px solid var(--line);
+  background: white;
+}
+
+@media (max-width: 760px) {
+  .revoke-confirmation-actions {
+    position: sticky;
+    bottom: 0;
+    padding-block: 8px;
+    background: white;
+  }
+}
+
+.member-directory {
+  container-type: inline-size;
+}
+
+.member-filters.toolbar {
+  align-items: flex-end;
+  margin-block: 0;
+  padding: 16px;
+}
+
+.member-unit-filter {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.member-filters .member-refresh {
+  width: 44px;
+  padding: 0;
+  font-size: 22px;
+}
+
+.member-table,
 .pickup-history-table {
   width: 100%;
   table-layout: fixed;
@@ -1397,13 +1499,13 @@ input[type="checkbox"] {
   background: white;
 }
 
-.pickup-history-table th,
-.pickup-history-table td {
+:is(.pickup-history-table, .member-table) :is(th, td) {
   padding: 12px 16px;
   text-align: center;
   overflow-wrap: anywhere;
 }
 
+.member-table thead th,
 .pickup-history-headings th {
   color: var(--muted);
   background: var(--soft);
@@ -1424,15 +1526,60 @@ input[type="checkbox"] {
   text-align: center;
 }
 
+.member-table thead th:first-child { border-top-left-radius: 13px; }
+.member-table thead th:last-child { width: 176px; border-top-right-radius: 13px; }
+.member-table thead th:nth-child(3) { width: 96px; }
+.member-table tbody th { text-align: left; }
+
+.unit-table thead th:nth-child(3) { width: 42%; }
+.unit-table thead th:first-child { text-align: left; }
+
+.occupancy-table thead th:first-child { text-align: left; }
+.occupancy-table thead th:nth-child(3) { width: auto; }
+.occupancy-table thead th:last-child { width: 220px; }
+
+.occupancy-table .occupancy-end-action {
+  border-color: #edcbc8;
+  color: var(--danger);
+}
+
+.occupancy-table .occupancy-end-action:hover {
+  background: var(--danger-bg);
+}
+
+.unit-table .unit-row-actions {
+  justify-content: center;
+}
+
+.modal:has(.unit-editor) {
+  max-width: 580px;
+}
+
+.unit-editor-actions {
+  justify-content: flex-end;
+}
+
+.member-table tbody tr > *,
 .pickup-history-record > * {
   border-top: 1px solid var(--line);
 }
 
+.member-field-label,
 .pickup-history-field-label {
   display: none;
 }
 
 @container (width < 740px) {
+  .occupancy-table tbody .button {
+    width: 100%;
+  }
+
+  .unit-table .unit-row-actions {
+    justify-content: flex-start;
+  }
+
+  .member-table,
+  .member-table tbody,
   .pickup-history-table,
   .pickup-history-table tbody {
     display: grid;
@@ -1440,11 +1587,13 @@ input[type="checkbox"] {
     min-width: 0;
   }
 
+  .member-table,
   .pickup-history-table {
     border: 0;
     background: transparent;
   }
 
+  .member-table thead,
   .pickup-history-headings {
     position: absolute;
     width: 1px;
@@ -1453,6 +1602,7 @@ input[type="checkbox"] {
     clip-path: inset(50%);
   }
 
+  .member-table tbody tr,
   .pickup-history-record {
     display: grid;
     gap: 8px;
@@ -1463,14 +1613,22 @@ input[type="checkbox"] {
     background: white;
   }
 
+  .member-table tbody tr > *,
   .pickup-history-table .pickup-history-record > * {
     padding: 0;
     border: 0;
     text-align: left;
   }
 
+  .member-table tbody th,
   .pickup-history-record th { font-size: 18px; }
+  .member-table tbody button,
   .pickup-history-record button { width: 100%; }
+  .unit-table .unit-row-actions > .button {
+    flex: 1 1 auto;
+    width: auto;
+  }
+  .member-field-label,
   .pickup-history-field-label {
     display: inline;
     color: var(--muted);
