@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import styles from "./landing.module.css";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -51,22 +50,22 @@ const icons = {
 
 function HeroPhone() {
   return (
-    <div className={styles.phone}>
-      <div className={styles.phoneTitle}>我的包裹</div>
-      <div className={styles.phoneCard}>
-        <div className={styles.phoneRow}>
+    <div className="landing-phone">
+      <div className="landing-phone-title">我的包裹</div>
+      <div className="landing-phone-card">
+        <div className="landing-phone-row">
           <strong>新竹物流</strong>
-          <span className={`${styles.badge} ${styles.badgeWaiting}`}>待領取</span>
+          <span className="landing-badge landing-badge-waiting">待領取</span>
         </div>
-        <div className={styles.phoneMeta}>存放位置：櫃檯 A 櫃</div>
-        <div className={styles.phoneLink}>查看取件碼 ›</div>
+        <div className="landing-phone-meta">存放位置：櫃檯 A 櫃</div>
+        <div className="landing-phone-link">查看取件碼 ›</div>
       </div>
-      <div className={styles.phoneCard}>
-        <div className={styles.phoneRow}>
+      <div className="landing-phone-card">
+        <div className="landing-phone-row">
           <strong>黑貓宅急便</strong>
-          <span className={`${styles.badge} ${styles.badgeDone}`}>已簽收</span>
+          <span className="landing-badge landing-badge-done">已簽收</span>
         </div>
-        <div className={styles.phoneMeta}>昨天 18:20</div>
+        <div className="landing-phone-meta">昨天 18:20</div>
       </div>
     </div>
   );
@@ -74,39 +73,39 @@ function HeroPhone() {
 
 function RegisterMock() {
   return (
-    <div className={styles.mock}>
-      <div className={styles.mockTitle}>登記包裹</div>
-      <div className={styles.field}>
+    <div className="landing-mock">
+      <div className="landing-mock-title">登記包裹</div>
+      <div className="landing-field">
         <span>入住戶別</span>
         <div>5F-3</div>
       </div>
-      <div className={styles.field}>
+      <div className="landing-field">
         <span>收件人</span>
         <div>王小明</div>
       </div>
-      <div className={styles.fieldPair}>
-        <div className={styles.field}>
+      <div className="landing-field-pair">
+        <div className="landing-field">
           <span>物流公司</span>
           <div>新竹物流</div>
         </div>
-        <div className={styles.field}>
+        <div className="landing-field">
           <span>存放位置</span>
           <div>櫃檯 A 櫃</div>
         </div>
       </div>
-      <div className={styles.mockButton}>登記包裹</div>
+      <div className="landing-mock-button">登記包裹</div>
     </div>
   );
 }
 
 function PickupMock() {
   return (
-    <div className={`${styles.mock} ${styles.center}`}>
-      <div className={styles.codeLabel}>你的取件碼</div>
-      <div className={styles.code}>482917</div>
-      <div className={styles.mockDivider}>
-        <div className={styles.mockNote}>管理員已核對，請確認收到包裹</div>
-        <div className={`${styles.mockButton} ${styles.mockButtonInline}`}>確認收到</div>
+    <div className="landing-mock landing-center">
+      <div className="landing-code-label">你的取件碼</div>
+      <div className="landing-code">482917</div>
+      <div className="landing-mock-divider">
+        <div className="landing-mock-note">管理員已核對，請確認收到包裹</div>
+        <div className="landing-mock-button landing-mock-button-inline">確認收到</div>
       </div>
     </div>
   );
@@ -120,15 +119,15 @@ function RecordsMock() {
   ];
 
   return (
-    <div className={styles.mock}>
-      <div className={styles.mockTitle}>簽收紀錄</div>
-      <div className={`${styles.recordRow} ${styles.recordHead}`}>
+    <div className="landing-mock">
+      <div className="landing-mock-title">簽收紀錄</div>
+      <div className="landing-record-row landing-record-head">
         <span>簽收者</span>
         <span>時間</span>
         <span>經手管理員</span>
       </div>
       {rows.map(([name, time, admin]) => (
-        <div key={`${name}-${time}`} className={styles.recordRow}>
+        <div key={`${name}-${time}`} className="landing-record-row">
           <span>{name}</span>
           <span>{time}</span>
           <span>{admin}</span>
@@ -140,13 +139,13 @@ function RecordsMock() {
 
 function InviteMock() {
   return (
-    <div className={`${styles.mock} ${styles.center}`}>
-      <div className={styles.codeLabel}>戶別邀請碼</div>
-      <div className={styles.code}>0725</div>
-      <div className={styles.mockNote}>有效至 11/14 14:30</div>
-      <div className={styles.mockButtons}>
-        <div className={`${styles.mockButton} ${styles.mockButtonLight}`}>重新產生</div>
-        <div className={`${styles.mockButton} ${styles.mockButtonLight}`}>停用</div>
+    <div className="landing-mock landing-center">
+      <div className="landing-code-label">戶別邀請碼</div>
+      <div className="landing-code">0725</div>
+      <div className="landing-mock-note">有效至 11/14 14:30</div>
+      <div className="landing-mock-buttons">
+        <div className="landing-mock-button landing-mock-button-light">重新產生</div>
+        <div className="landing-mock-button landing-mock-button-light">停用</div>
       </div>
     </div>
   );
@@ -256,27 +255,27 @@ const faqs = [
 
 export default function LandingPage() {
   return (
-    <div className={styles.landing}>
+    <div className="landing">
       <main>
-        <section className={styles.hero}>
+        <section className="landing-hero">
           <div>
             <h1>管理員好登記，住戶好領取</h1>
-            <p className={styles.heroLead}>
+            <p className="landing-hero-lead">
               大樓包裹從登記、核對到簽收，整個流程都在同一個系統完成，每一筆都留有紀錄。
             </p>
-            <div className={styles.actions}>
-              <Link className={`button button-primary ${styles.buttonPrimary}`} href="/login">
+            <div className="landing-actions">
+              <Link className="button button-primary landing-button-primary" href="/login">
                 <Icon>{icons.home}</Icon>住戶登入
               </Link>
               <Link className="button" href="/login">
                 <Icon>{icons.building}</Icon>管理員登入
               </Link>
             </div>
-            <p className={styles.registerHint}>
+            <p className="landing-register-hint">
               還沒有帳號？<Link href="/register">註冊住戶帳號</Link>
             </p>
           </div>
-          <figure className={styles.visual}>
+          <figure className="landing-visual">
             <div aria-hidden="true">
               <HeroPhone />
             </div>
@@ -284,12 +283,12 @@ export default function LandingPage() {
           </figure>
         </section>
 
-        <section className={styles.section} aria-labelledby="flow-title">
+        <section className="landing-section" aria-labelledby="flow-title">
           <h2 id="flow-title">三步驟，把包裹交到住戶手上</h2>
-          <ol className={styles.steps}>
+          <ol className="landing-steps">
             {steps.map((step, index) => (
-              <li key={step.title} className={styles.step}>
-                <span className={styles.stepNumber}>{index + 1}</span>
+              <li key={step.title} className="landing-step">
+                <span className="landing-step-number">{index + 1}</span>
                 <h3>{step.title}</h3>
                 <p className="muted">{step.text}</p>
               </li>
@@ -297,25 +296,25 @@ export default function LandingPage() {
           </ol>
         </section>
 
-        <section className={styles.section} aria-labelledby="features-title">
+        <section className="landing-section" aria-labelledby="features-title">
           <h2 id="features-title">用一個系統，管好包裹的每一步</h2>
-          <ul className={styles.chips}>
+          <ul className="landing-chips">
             {features.map((feature) => (
               <li key={feature.id}>
-                <a className={styles.chip} href={`#${feature.id}`}>
+                <a className="landing-chip" href={`#${feature.id}`}>
                   {feature.title}
                 </a>
               </li>
             ))}
           </ul>
-          <div className={styles.features}>
+          <div className="landing-features">
             {features.map((feature) => (
-              <article key={feature.id} id={feature.id} className={styles.feature}>
+              <article key={feature.id} id={feature.id} className="landing-feature">
                 <div>
-                  <span className={styles.tag}>{feature.tag}</span>
+                  <span className="landing-tag">{feature.tag}</span>
                   <h3>{feature.title}</h3>
                   <p className="muted">{feature.lead}</p>
-                  <ul className={styles.points}>
+                  <ul className="landing-points">
                     {feature.points.map((point) => (
                       <li key={point}>
                         <Icon>{icons.check}</Icon>
@@ -324,7 +323,7 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-                <figure className={styles.visual}>
+                <figure className="landing-visual">
                   <div aria-hidden="true">{feature.visual}</div>
                   <figcaption>示意畫面</figcaption>
                 </figure>
@@ -333,12 +332,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className={styles.section} aria-labelledby="extras-title">
+        <section className="landing-section" aria-labelledby="extras-title">
           <h2 id="extras-title">更多貼心功能</h2>
-          <div className={styles.extras}>
+          <div className="landing-extras">
             {extras.map((extra) => (
-              <div key={extra.title} className={styles.extra}>
-                <span className={styles.extraIcon}>
+              <div key={extra.title} className="landing-extra">
+                <span className="landing-extra-icon">
                   <Icon>{extra.icon}</Icon>
                 </span>
                 <h3>{extra.title}</h3>
@@ -348,20 +347,20 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className={styles.section} aria-labelledby="places-title">
+        <section className="landing-section" aria-labelledby="places-title">
           <h2 id="places-title">適合這些場所</h2>
-          <ul className={styles.chips}>
+          <ul className="landing-chips">
             {places.map((place) => (
-              <li key={place} className={styles.chip}>
+              <li key={place} className="landing-chip">
                 {place}
               </li>
             ))}
           </ul>
         </section>
 
-        <section className={styles.section} aria-labelledby="faq-title">
+        <section className="landing-section" aria-labelledby="faq-title">
           <h2 id="faq-title">常見問題</h2>
-          <div className={styles.faq}>
+          <div className="landing-faq">
             {faqs.map((faq, index) => (
               <details key={faq.q} open={index === 0}>
                 <summary>{faq.q}</summary>
@@ -371,18 +370,18 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className={styles.cta} aria-labelledby="cta-title">
+        <section className="landing-cta" aria-labelledby="cta-title">
           <h2 id="cta-title">開始使用大樓包裹管理系統</h2>
           <p>請選擇你的身分登入。</p>
-          <div className={styles.actions}>
-            <Link className={`button ${styles.ctaLight}`} href="/login">
+          <div className="landing-actions">
+            <Link className="button landing-cta-light" href="/login">
               <Icon>{icons.home}</Icon>住戶登入
             </Link>
-            <Link className={`button ${styles.ctaOutline}`} href="/login">
+            <Link className="button landing-cta-outline" href="/login">
               <Icon>{icons.building}</Icon>管理員登入
             </Link>
           </div>
-          <p className={styles.ctaNote}>
+          <p className="landing-cta-note">
             還沒有帳號？<Link href="/register">註冊住戶帳號</Link>。管理員帳號由系統管理員建立。
           </p>
         </section>
