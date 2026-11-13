@@ -1658,9 +1658,9 @@ input[type="checkbox"] {
 .landing-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
+  gap: 28px;
   align-items: center;
-  padding: 36px 24px;
+  padding: 32px 22px;
   border: 1px solid var(--brand-border);
   border-radius: 18px;
   background: var(--soft);
@@ -1697,62 +1697,212 @@ input[type="checkbox"] {
   color: #fff;
 }
 
-/* ---------- 示意畫面共用 ---------- */
 .landing-visual {
   margin: 0;
 }
 
-.landing-visual figcaption {
-  margin-top: 8px;
+.landing-cap {
+  margin-top: 10px;
   text-align: center;
   font-size: 12px;
   color: var(--muted);
 }
 
+/* ---------- 手機外框（純 CSS）：大手機用在功能區，小手機用在標題區 ---------- */
 .landing-phone {
-  width: 220px;
+  position: relative;
+  flex: none;
+  width: 310px;
+  height: 640px;
   margin-inline: auto;
-  padding: 14px 12px;
-  border: 7px solid var(--foreground);
-  border-radius: 30px;
+  padding: 11px;
+  border-radius: 56px;
+  background: #1b232a;
+  box-shadow: 0 0 0 2px #3a464f, 0 30px 60px -20px rgba(36, 55, 70, 0.35);
+}
+
+.landing-phone::before,
+.landing-phone::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: #3a464f;
+}
+
+.landing-phone::before {
+  left: -5px;
+  top: 128px;
+  height: 56px;
+  box-shadow: 0 74px 0 #3a464f;
+}
+
+.landing-phone::after {
+  right: -5px;
+  top: 170px;
+  height: 88px;
+}
+
+.landing-screen {
+  position: relative;
+  height: 100%;
+  border-radius: 46px;
+  overflow: hidden;
   background: var(--background);
 }
 
-.landing-phone-title {
-  margin-bottom: 10px;
-  font-size: 14px;
+.landing-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 3;
+  width: 92px;
+  height: 27px;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  background: #000;
+}
+
+.landing-status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 6px 28px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.landing-status i {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+}
+
+.landing-status i::after {
+  content: "";
+  position: absolute;
+  inset: 1px 4px 1px 1px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.landing-home {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  z-index: 3;
+  width: 110px;
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 9px;
+  background: var(--foreground);
+  opacity: 0.85;
+}
+
+.landing-phone-sm {
+  width: 250px;
+  height: 510px;
+  padding: 9px;
+  border-radius: 46px;
+}
+
+.landing-phone-sm::before {
+  left: -4px;
+  top: 100px;
+  height: 44px;
+  box-shadow: 0 60px 0 #3a464f;
+}
+
+.landing-phone-sm::after {
+  right: -4px;
+  top: 134px;
+  height: 70px;
+}
+
+.landing-phone-sm .landing-screen {
+  border-radius: 38px;
+}
+
+.landing-phone-sm .landing-island {
+  top: 8px;
+  width: 84px;
+  height: 24px;
+}
+
+.landing-phone-sm .landing-status {
+  height: 44px;
+  padding: 8px 22px 0;
+  font-size: 12px;
+}
+
+.landing-phone-sm .landing-home {
+  bottom: 6px;
+}
+
+.landing-body-sm {
+  padding: 58px 14px 30px;
+}
+
+/* ---------- 手機畫面裡的內容（示意） ---------- */
+.landing-s-title {
+  margin-bottom: 14px;
+  font-size: 16px;
   font-weight: 650;
 }
 
-.landing-phone-card {
-  margin-bottom: 10px;
-  padding: 12px;
+.landing-s-card {
+  margin-bottom: 12px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-.landing-phone-card:last-child {
+.landing-s-card:last-child {
   margin-bottom: 0;
 }
 
-.landing-phone-row {
+.landing-s-card-roomy {
+  padding: 22px 14px;
+}
+
+.landing-s-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.landing-phone-meta {
+.landing-s-meta {
   color: var(--muted);
   font-size: 12px;
 }
 
-.landing-phone-link {
+.landing-s-card .landing-s-note {
+  margin: 6px 0 16px;
+}
+
+.landing-s-split .landing-s-note {
+  margin: 0 0 12px;
+}
+
+.landing-slide > .landing-s-note {
+  margin-top: 12px;
+}
+
+.landing-s-link {
   margin-top: 6px;
   color: var(--brand);
-  font-size: 13px;
   font-weight: 600;
 }
 
@@ -1773,126 +1923,103 @@ input[type="checkbox"] {
   background: var(--success-bg);
 }
 
-.landing-mock {
-  padding: 18px;
-  border: 1px solid var(--brand-border);
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 8px 30px #22343b0d;
-}
-
-.landing-mock-title {
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: 650;
-}
-
-.landing-field {
-  margin-bottom: 10px;
-}
-
-.landing-field > span {
-  display: block;
+.landing-s-label {
   margin-bottom: 2px;
   font-size: 12px;
   color: var(--muted);
 }
 
-.landing-field > div {
-  padding: 8px 12px;
+.landing-s-field {
+  margin-bottom: 10px;
+  padding: 10px 12px;
   border: 1px solid #bccbd0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #fff;
-  font-size: 14px;
+  font-size: 15px;
 }
 
-.landing-field-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.landing-mock-button {
+.landing-s-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  margin-top: 4px;
-  border-radius: 9px;
+  min-height: 46px;
+  border-radius: 12px;
   background: var(--brand);
   color: #fff;
-  font-size: 14px;
-  font-weight: 550;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-.landing-mock-button-inline {
-  display: inline-flex;
-  padding-inline: 20px;
-  margin-top: 0;
-}
-
-.landing-mock-button-light {
-  padding-inline: 18px;
-  margin-top: 0;
+.landing-s-btn-light {
+  flex: 1;
   border: 1px solid var(--brand-border);
   background: #fff;
   color: var(--brand);
 }
 
-.landing-mock-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.landing-center {
-  text-align: center;
-}
-
-.landing-code-label {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.landing-code {
+.landing-s-code {
   color: var(--brand);
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 8px;
   padding-left: 8px;
+  text-align: center;
 }
 
-.landing-mock-divider {
+.landing-s-center {
+  text-align: center;
+}
+
+.landing-s-split {
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }
 
-.landing-mock-note {
-  margin-bottom: 10px;
-  font-size: 13px;
-  color: var(--muted);
+.landing-s-gap {
+  display: flex;
+  gap: 10px;
 }
 
-.landing-record-row {
+.landing-s-rec {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 1.2fr;
-  gap: 8px;
-  padding: 9px 0;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 6px;
+  padding: 11px 0;
   border-top: 1px solid var(--line);
-  font-size: 13px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
-.landing-record-head {
+.landing-s-rec-head {
   border-top: 0;
   color: var(--muted);
   font-size: 12px;
 }
 
+.landing-phone-sm .landing-s-title {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.landing-phone-sm .landing-s-card {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.landing-phone-sm .landing-s-meta {
+  font-size: 11px;
+}
+
+.landing-phone-sm .landing-badge {
+  font-size: 11px;
+}
+
 /* ---------- 各區塊 ---------- */
 .landing-section {
-  margin-top: 64px;
+  margin-top: 56px;
 }
 
 .landing-section > h2 {
@@ -1961,20 +2088,68 @@ input[type="checkbox"] {
   border-radius: 999px;
   background: #fff;
   font-size: 14px;
-  text-decoration: none;
 }
 
-.landing-features {
-  display: grid;
-  gap: 56px;
-  margin-top: 32px;
+/* ---------- 功能翻頁：往下捲動，畫面釘住，手機裡的畫面橫向滑到下一張 ---------- */
+/*
+ * --landing-step：每個功能的捲動距離（螢幕高的百分比）
+ * --landing-hold：最後一頁多停留的距離
+ * --landing-n：功能數量，由元件依資料設定
+ * 釘住（sticky）要求上層元素都不能設定 overflow。
+ */
+.landing-stage {
+  --landing-step: 60;
+  --landing-hold: 20;
+  position: relative;
+  height: calc(100svh + (var(--landing-n) * var(--landing-step) + var(--landing-hold)) * 1svh);
 }
 
-.landing-feature {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+.landing-pin {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: 24px;
+  height: 100svh;
+}
+
+.landing-pin > h2 {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(22px, 3vw, 28px);
+  text-wrap: balance;
+}
+
+.landing-feat-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) auto;
+  gap: 48px;
   align-items: center;
+  justify-content: center;
+}
+
+.landing-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.landing-panel {
+  grid-area: 1 / 1;
+  padding: 30px 32px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.35s, transform 0.35s, visibility 0.35s;
+}
+
+.landing-panel.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
 }
 
 .landing-tag {
@@ -1986,15 +2161,15 @@ input[type="checkbox"] {
   font-size: 13px;
 }
 
-.landing-feature h3 {
-  margin: 8px 0 4px;
+.landing-panel h3 {
+  margin: 10px 0 14px;
   font-size: 22px;
 }
 
 .landing-points {
   display: grid;
-  gap: 8px;
-  margin: 16px 0 0;
+  gap: 10px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -2002,7 +2177,7 @@ input[type="checkbox"] {
 .landing-points li {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
 }
 
 .landing-points svg {
@@ -2013,6 +2188,66 @@ input[type="checkbox"] {
   color: var(--success);
 }
 
+.landing-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding-left: 4px;
+}
+
+/* 全站 .public-content button 會把按鈕撐到 44px 高，圓點要用更高的優先權改回來 */
+.landing .landing-dots .landing-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: var(--brand-border);
+  cursor: pointer;
+  transition: width 0.25s, background 0.25s;
+}
+
+.landing .landing-dots .landing-dot::after {
+  content: "";
+  position: absolute;
+  inset: -14px -5px;
+}
+
+.landing .landing-dots .landing-dot.is-on {
+  width: 26px;
+  background: var(--brand);
+}
+
+.landing-dots-note {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.landing-track {
+  display: flex;
+  height: 100%;
+  overflow-x: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.landing-track::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 64px 14px 34px;
+  scroll-snap-align: start;
+}
+
+/* ---------- 常見問題、聯絡我 ---------- */
 .landing-faq {
   max-width: 760px;
   margin-inline: auto;
@@ -2033,57 +2268,46 @@ input[type="checkbox"] {
   color: var(--muted);
 }
 
-/* ---------- 結尾行動區 ---------- */
-.landing-cta {
+.landing-contact {
   margin-top: 64px;
-  padding: 40px 24px;
+  padding: 38px 22px;
+  border: 1px solid var(--brand-border);
   border-radius: 18px;
-  background: var(--brand);
+  background: var(--soft);
   text-align: center;
 }
 
-.landing-cta h2,
-.landing-cta p {
-  color: #fff;
-}
-
-.landing-cta h2 {
-  margin-bottom: 8px;
+.landing-contact h2 {
+  margin-bottom: 18px;
   font-size: clamp(22px, 3vw, 28px);
 }
 
-.landing-cta .landing-actions {
+.landing-contact .landing-actions {
   justify-content: center;
+  margin-top: 0;
 }
 
-.landing-cta .landing-cta-note {
-  margin-top: 14px;
-  font-size: 13px;
-  color: var(--brand-border);
-}
-
-.landing .landing-cta-note a {
+.landing .landing-contact-solid {
+  border-color: var(--brand);
+  background: var(--brand);
   color: #fff;
-  text-decoration: underline;
 }
 
-.landing .landing-cta-light {
-  border-color: #fff;
+.landing .landing-contact-solid:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+
+.landing .landing-contact-line {
+  border-color: var(--brand);
   background: #fff;
   color: var(--brand);
 }
 
-.landing .landing-cta-outline {
-  border-color: #fff;
-  background: transparent;
-  color: #fff;
+.landing .landing-contact-line:hover:not(:disabled) {
+  background: #f5f9fc;
 }
 
-.landing .landing-cta-outline:hover:not(:disabled) {
-  background: rgb(255 255 255 / 0.16);
-}
-
-/* ---------- 桌面版：改成左右兩欄、三欄 ---------- */
+/* ---------- 版面斷點 ---------- */
 @media (min-width: 760px) {
   .landing-hero {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
@@ -2094,13 +2318,88 @@ input[type="checkbox"] {
   .landing-extras {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
 
-  .landing-feature {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px;
+@media (max-height: 760px) and (min-width: 861px) {
+  .landing-phone-lg {
+    zoom: 0.85;
+  }
+}
+
+@media (max-height: 660px) and (min-width: 861px) {
+  .landing-phone-lg {
+    zoom: 0.7;
+  }
+}
+
+/* 窄螢幕：一樣釘住並依捲動換頁；手機在上（縮小），文字在下，每個功能的捲動距離縮短 */
+@media (max-width: 860px) {
+  .landing-stage {
+    --landing-step: 50;
+    --landing-hold: 15;
   }
 
-  .landing-feature:nth-child(even) .landing-visual {
+  .landing-pin {
+    gap: 0;
+  }
+
+  .landing-pin > h2 {
+    display: none;
+  }
+
+  .landing-feat-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .landing-feat-grid > .landing-phone-lg {
     order: -1;
+    zoom: 0.6;
+  }
+
+  .landing-copy {
+    width: 100%;
+    max-width: 520px;
+    margin-inline: auto;
+  }
+
+  .landing-panel {
+    padding: 16px 18px;
+    border-radius: 14px;
+  }
+
+  .landing-panel h3 {
+    margin: 6px 0 8px;
+    font-size: 19px;
+  }
+
+  .landing-points {
+    gap: 5px;
+  }
+
+  .landing-points li {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .landing-dots {
+    justify-content: center;
+    margin-top: 12px;
+    padding-left: 0;
+  }
+
+  .landing-scroll-hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-panel,
+  .landing .landing-dots .landing-dot {
+    transition: none;
+  }
+
+  .landing-track {
+    scroll-behavior: auto;
   }
 }
