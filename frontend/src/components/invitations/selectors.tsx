@@ -14,9 +14,11 @@ import { Query, formatTime } from "./shared";
 export function UnitPicker({
   buildingId,
   onSelect,
+  onSelectAll,
 }: {
   buildingId: number;
   onSelect: (unit: Unit) => void;
+  onSelectAll?: () => void;
 }) {
   const [page, setPage] = useState(1);
 
@@ -28,6 +30,13 @@ export function UnitPicker({
   return (
     <section className="panel form-stack" aria-label="選擇戶別">
       <h2>選擇戶別</h2>
+      {onSelectAll && (
+        <div className="actions">
+          <button type="button" className="button" onClick={onSelectAll}>
+            全部戶別
+          </button>
+        </div>
+      )}
 
       <Query key={`${buildingId}:${page}`} load={load}>
         {(result) => (

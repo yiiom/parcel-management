@@ -24,6 +24,7 @@ import {
   formatTime,
 } from "@/components/invitations/shared";
 import {
+  Badge,
   Modal,
   PageState,
   Pagination,
@@ -190,7 +191,7 @@ function EndReview({
 
   return (
     <Modal
-      title="整戶結束與更替"
+      title="結束整戶入住"
       onClose={() => {
         if (!lockRef.current) onClose();
       }}
@@ -205,20 +206,31 @@ function EndReview({
             write={write}
             lockRef={lockRef}
             title="結束這次整戶入住"
-            acknowledgement="我已核對本次入住、全部受影響成員及未領包裹，確認這是整戶搬離。"
+            inlineRefresh
+            compactConfirmation={{ confirmLabel: "確認結束入住", backLabel: "返回" }}
+            successMessage="已結束此戶的本次入住。"
+            acknowledgement="我已核對戶別與完整影響清單，確認結束這次入住。"
             preview={(data) => <EndImpactPreview data={data} />}
           >
-            {(data) => (
-              <section className="panel form-stack">
-                <h2>{data.unit.label}</h2>
-                <dl className="detail-grid">
-                  <dt>入住編號</dt>
-                  <dd>{data.occupancy.id}</dd>
-                  <dt>開始時間</dt>
-                  <dd>{formatTime(data.occupancy.started_at)}</dd>
-                  <dt>結束時間</dt>
-                  <dd>{formatTime(data.occupancy.ended_at)}</dd>
-                </dl>
+            {(data, refreshControl) => (
+              <section className="end-occupancy-summary">
+                <div className="revoke-summary-heading">
+                  <div>
+                    <div className="actions">
+                      <h3>{data.unit.label}</h3>
+                      <Badge tone={data.occupancy.ended_at ? "gray" : "green"}>
+                        {data.occupancy.ended_at ? "已結束" : "目前入住"}
+                      </Badge>
+                    </div>
+                    <p className="muted">
+                      入住編號 #{data.occupancy.id}・開始於 {formatTime(data.occupancy.started_at)}
+                    </p>
+                    {data.occupancy.ended_at && (
+                      <p className="muted">結束時間：{formatTime(data.occupancy.ended_at)}</p>
+                    )}
+                  </div>
+                  {refreshControl}
+                </div>
 
                 {data.occupancy.ended_at ? (
                   <>
@@ -240,12 +252,7 @@ function EndReview({
                       <Link href="/exceptions">處理舊入住異常包裹</Link>
                     </div>
                   </>
-                ) : (
-                  <p className="notice notice-warning">
-                    請先檢查完整影響清單，再確認結束。
-                    結束後不會自動建立新入住。
-                  </p>
-                )}
+                ) : null}
               </section>
             )}
           </ReviewedOperation>
@@ -269,10 +276,10 @@ function EndImpactPreview({ data }: { data: MoveOutImpact }) {
 
   return (
     <div className="form-stack">
-      <p className="notice notice-warning">
-        同一筆後端交易會結束入住、取消有效及等待退出資格、
-        停用邀請碼、取消未完成驗證，並處理下列未領包裹。
-      </p>
+      <div className="notice revoke-impact">
+        <p>結束後須另行建立下一次入住。</p>
+        <p>系統會取消下列成員的資格、停用現有邀請碼、取消未完成的取件驗證，並依清單處理未領包裹。</p>
+      </div>
 
       <h3>將取消資格的成員：{members.length} 位</h3>
       <ImpactList
@@ -290,14 +297,13 @@ function EndImpactPreview({ data }: { data: MoveOutImpact }) {
         )}
       />
 
-      <h3>目前有效邀請碼：{invites.length} 筆</h3>
-      {invites.length === 0 ? (
-        <p>目前沒有有效邀請碼。</p>
-      ) : invites.map((invite) => (
-        <p key={invite.id}>
-          紀錄 #{invite.id}・期限 {formatTime(invite.expires_at)}
-        </p>
-      ))}
+      <h3>將停用的邀請碼：{invites.length} 筆</h3>
+      <ImpactList
+        items={invites}
+        render={(invite) => (
+          <p>紀錄 #{invite.id}・期限 {formatTime(invite.expires_at)}</p>
+        )}
+      />
 
       <h3>待領及異常包裹：{parcels.length} 件</h3>
       <ImpactList
@@ -344,24 +350,26 @@ function ImpactList<T extends { id: number }>({
 }) {
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  const visible = items.slice((page - 1) * pageSize, page * pageSize);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(items.length / pageSize)));
+  const visible = items.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <section className="form-stack">
-      {items.length === 0 && <p>沒有受影響資料。</p>}
-
-      {visible.map((item) => (
-        <article key={item.id} className="panel">
-          {render(item)}
-        </article>
-      ))}
-
-      <Pagination
-        page={page}
-        total={items.length}
-        pageSize={pageSize}
-        onChange={setPage}
-      />
+    <section className="end-impact-list">
+      {items.length === 0 ? (
+        <p className="muted">沒有受影響資料。</p>
+      ) : (
+        <ul>
+          {visible.map((item) => <li key={item.id}>{render(item)}</li>)}
+        </ul>
+      )}
+      {items.length > pageSize && (
+        <Pagination
+          page={currentPage}
+          total={items.length}
+          pageSize={pageSize}
+          onChange={setPage}
+        />
+      )}
     </section>
   );
 }

@@ -26,6 +26,8 @@ type Props<T> = {
   acknowledgement: string;
   children: (data: T, refreshControl: ReactNode) => ReactNode;
   inlineRefresh?: boolean;
+  compactConfirmation?: { confirmLabel: string; backLabel: string };
+  successMessage?: string;
   preview: (data: T) => ReactNode;
   onData?: (data: T) => void;
   pollMs?: number;
@@ -43,6 +45,8 @@ export default function ReviewedOperation<T>({
   acknowledgement,
   children,
   inlineRefresh = false,
+  compactConfirmation,
+  successMessage,
   preview,
   onData,
   pollMs = 0,
@@ -220,7 +224,8 @@ export default function ReviewedOperation<T>({
 
       apply(current);
       setMessage(
-        "後端已接受本次操作，以下為重新查詢的最新狀態。",
+        (done(current) && successMessage) ||
+          "後端已接受本次操作，以下為重新查詢的最新狀態。",
       );
     } catch (cause) {
       if (!aliveRef.current) return;
@@ -308,8 +313,8 @@ export default function ReviewedOperation<T>({
           )}
 
           {!done(data) && reviewed && (
-            <section className="panel form-stack">
-              <h2>確認：{title}</h2>
+            <section className={compactConfirmation ? "form-stack" : "panel form-stack"}>
+              {!compactConfirmation && <h2>確認：{title}</h2>}
 
               {preview(data)}
 
@@ -325,14 +330,14 @@ export default function ReviewedOperation<T>({
                 {acknowledgement}
               </label>
 
-              <div className="actions">
+              <div className={compactConfirmation ? "actions revoke-confirmation-actions" : "actions"}>
                 <button
                   type="button"
                   className="button button-primary"
                   disabled={busy || !checked}
                   onClick={() => void commit()}
                 >
-                  {busy ? "正在核對及送出…" : "確認送出"}
+                  {busy ? "正在核對及送出…" : (compactConfirmation?.confirmLabel ?? "確認送出")}
                 </button>
 
                 <button
@@ -344,7 +349,7 @@ export default function ReviewedOperation<T>({
                     setChecked(false);
                   }}
                 >
-                  取消本次確認
+                  {compactConfirmation?.backLabel ?? "取消本次確認"}
                 </button>
               </div>
             </section>
