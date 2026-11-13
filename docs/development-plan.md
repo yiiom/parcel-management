@@ -1,5 +1,13 @@
 # 開發順序與驗收標準
 
+### 2026-11-13 公開服務首頁（D-28）
+
+- 依 D-28 新增公開服務首頁：`/` 不再轉址到 `/login`，改為宣傳型頁面（標題與兩個身分登入入口、三步驟流程、四個功能區塊、更多功能、適用場所、常見問題、結尾登入區）。住戶與大樓管理員兩個入口都連到 `/login`，住戶入口另有 `/register` 連結。只改前端：`app/page.tsx` 改為載入元件，新增 `components/landing/landing-page.tsx` 與 `landing.module.css`；未修改共用版型、API、資料庫、商業規則。
+- 功能畫面為程式繪製的示意畫面，標示「示意畫面」，姓名與單號為虛構，不呼叫 API；介紹文字只含已確認功能，不含通知、QR Code、照片、智慧櫃，也沒有客戶見證或使用人數。
+- 驗證：`docker compose exec frontend npx eslint src` 與 `npx tsc --noEmit --incremental false` 皆通過（退出碼 0）；`docker compose run --rm --no-deps frontend npm run build` 通過，`/` 為靜態頁。
+- 內建瀏覽器（登入為大樓管理員時開 `http://localhost:3001/`，首頁不轉址）：1280 寬為標題區兩欄、三步驟三欄、功能區塊左右交錯、無橫向捲動；375 寬全部單欄、無橫向捲動；主要按鈕與結尾區連結文字為白色；頁面連結指向 `/login`、`/register` 及頁內錨點。
+- 尚待使用者以一般瀏覽器確認視覺與文案；未執行 `deploy/ci-smoke.sh`（其首頁檢查為 `curl -fsS`，首頁回 200 預期可通過）。功能與階段完成狀態不變，不以首頁代表任何業務功能完成。
+
 ### 2026-10-23 D-27 空白大樓刪除
 
 - 使用者批准只有系統管理員可刪除沒有管理員分配、戶別及任何業務紀錄的大樓。已先同步 BR-03、D-27、確認清單、F-03、資料庫設計，再加入 `DELETE /api/buildings/{building_id}` 與詳情頁確認區。

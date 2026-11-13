@@ -1,0 +1,456 @@
+.landing {
+  width: 100%;
+  max-width: 1050px;
+  margin-inline: auto;
+}
+
+/* ---------- 標題區 ---------- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  padding: 36px 24px;
+  border: 1px solid var(--brand-border);
+  border-radius: 18px;
+  background: var(--soft);
+}
+
+.hero h1 {
+  margin-bottom: 12px;
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.heroLead {
+  font-size: 16px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.registerHint {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* 全站 .public-content a 會把連結改成品牌色，按鈕文字要在這裡改回白色 */
+.landing .buttonPrimary {
+  color: #fff;
+}
+
+/* ---------- 示意畫面共用 ---------- */
+.visual {
+  margin: 0;
+}
+
+.visual figcaption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.phone {
+  width: 220px;
+  margin-inline: auto;
+  padding: 14px 12px;
+  border: 7px solid var(--foreground);
+  border-radius: 30px;
+  background: var(--background);
+}
+
+.phoneTitle {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.phoneCard {
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.phoneCard:last-child {
+  margin-bottom: 0;
+}
+
+.phoneRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.phoneMeta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.phoneLink {
+  margin-top: 6px;
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.badgeWaiting {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.badgeDone {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.mock {
+  padding: 18px;
+  border: 1px solid var(--brand-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 30px #22343b0d;
+}
+
+.mockTitle {
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.field {
+  margin-bottom: 10px;
+}
+
+.field > span {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field > div {
+  padding: 8px 12px;
+  border: 1px solid #bccbd0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.fieldPair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mockButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-top: 4px;
+  border-radius: 9px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.mockButtonInline {
+  display: inline-flex;
+  padding-inline: 20px;
+  margin-top: 0;
+}
+
+.mockButtonLight {
+  padding-inline: 18px;
+  margin-top: 0;
+  border: 1px solid var(--brand-border);
+  background: #fff;
+  color: var(--brand);
+}
+
+.mockButtons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.center {
+  text-align: center;
+}
+
+.codeLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.code {
+  color: var(--brand);
+  font-size: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 8px;
+  padding-left: 8px;
+}
+
+.mockDivider {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.mockNote {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.recordRow {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1.2fr;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.recordHead {
+  border-top: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ---------- 各區塊 ---------- */
+.section {
+  margin-top: 64px;
+}
+
+.section > h2 {
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: clamp(22px, 3vw, 28px);
+  text-wrap: balance;
+}
+
+.steps,
+.extras {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step,
+.extra {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.stepNumber {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.extraIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--brand);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-block;
+  padding: 4px 14px;
+  border: 1px solid var(--brand-border);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.features {
+  display: grid;
+  gap: 56px;
+  margin-top: 32px;
+}
+
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--brand);
+  font-size: 13px;
+}
+
+.feature h3 {
+  margin: 8px 0 4px;
+  font-size: 22px;
+}
+
+.points {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.points svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  color: var(--success);
+}
+
+.faq {
+  max-width: 760px;
+  margin-inline: auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.faq details {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.faq summary {
+  font-weight: 600;
+}
+
+.faq p {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+/* ---------- 結尾行動區 ---------- */
+.cta {
+  margin-top: 64px;
+  padding: 40px 24px;
+  border-radius: 18px;
+  background: var(--brand);
+  text-align: center;
+}
+
+.cta h2,
+.cta p {
+  color: #fff;
+}
+
+.cta h2 {
+  margin-bottom: 8px;
+  font-size: clamp(22px, 3vw, 28px);
+}
+
+.cta .actions {
+  justify-content: center;
+}
+
+.cta .ctaNote {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--brand-border);
+}
+
+.landing .ctaNote a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.landing .ctaLight {
+  border-color: #fff;
+  background: #fff;
+  color: var(--brand);
+}
+
+.landing .ctaOutline {
+  border-color: #fff;
+  background: transparent;
+  color: #fff;
+}
+
+.landing .ctaOutline:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.16);
+}
+
+/* ---------- 桌面版：改成左右兩欄、三欄 ---------- */
+@media (min-width: 760px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    padding: 48px 40px;
+  }
+
+  .steps,
+  .extras {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .feature {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px;
+  }
+
+  .feature:nth-child(even) .visual {
+    order: -1;
+  }
+}
